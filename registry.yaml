@@ -2,13 +2,39 @@
 apiVersion: v1
 name: forge-registry
 description: Forge Registry
+maintainers: []
 defaults:
   sync_strategy: ""
   managed: false
 blueprints:
   - name: go-std
     path: go/std
-    description: 'Go Standard Repository'
+    description: Go Standard Repository
     version: 0.1.0
     tags: []
+    latest_commit: ""
+  - name: go/ext
+    path: go/ext
+    description: Go Extended Repository
+    version: 0.1.0
+    tags:
+      - go
+      - extended
+      - makefile
+    latest_commit: ""
+  - name: rust/std
+    path: rust/std
+    description: Rust Standard Repo
+    version: 0.1.0
+    tags:
+      - rust
+      - std
+    latest_commit: ""
+  - name: rust/esp32
+    path: rust/esp32
+    description: Rust ESP32 Repo
+    version: 0.1.0
+    tags:
+      - rust
+      - esp32
     latest_commit: ""
