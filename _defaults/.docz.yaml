@@ -1,12 +1,19 @@
 ---
 docs_dir: docs
 
+author:
+  from_git: true  # use git config user.name
+  default: ""  # fallback if git name unavailable
+
+index:
+  auto_update: true  # update README after docz create
+  preserve_header: true
+
 types:
   rfc:
     enabled: true
     dir: rfc
-    template: ""
-    id_prefix: "RFC"
+    id_prefix: RFC
     id_width: 4
     statuses:
       - Draft
@@ -14,26 +21,20 @@ types:
       - Accepted
       - Rejected
       - Superseded
-    status_field: "status"
-
   adr:
     enabled: true
     dir: adr
-    template: ""
-    id_prefix: "ADR"
+    id_prefix: ADR
     id_width: 4
     statuses:
       - Proposed
       - Accepted
       - Deprecated
       - Superseded
-    status_field: "status"
-
   design:
     enabled: true
     dir: design
-    template: ""
-    id_prefix: "DESIGN"
+    id_prefix: DESIGN
     id_width: 4
     statuses:
       - Draft
@@ -41,8 +42,17 @@ types:
       - Approved
       - Implemented
       - Abandoned
-    status_field: "status"
-
+  impl:
+    enabled: true
+    dir: impl
+    id_prefix: IMPL
+    id_width: 4
+    statuses:
+      - Draft
+      - In Progress
+      - Completed
+      - Paused
+      - Cancelled
   plan:
     enabled: true
     dir: plan
@@ -53,21 +63,6 @@ types:
       - In Progress
       - Completed
       - Cancelled
-
-  impl:
-    enabled: true
-    dir: impl
-    template: ""
-    id_prefix: "IMPL"
-    id_width: 4
-    statuses:
-      - Draft
-      - In Progress
-      - Completed
-      - Paused
-      - Cancelled
-    status_field: "status"
-
   investigation:
     enabled: true
     dir: investigation
@@ -80,10 +75,29 @@ types:
       - Inconclusive
       - Abandoned
 
-index:
+wiki:
   auto_update: true
-  preserve_header: true
+  mkdocs_path: mkdocs.yml
+  plugins:  # MkDocs plugins for wiki init
+    - techdocs-core
+  markdown_extensions:  # MkDocs markdown extensions
+    - admonition
+    - tables
+  exclude:
+    - templates
+    - examples
+  nav_titles:
+    rfc: "RFCs"
+    adr: "ADRs"
+    design: "Design"
+    impl: "Implementation Plans"
+    plan: "Plans"
+    investigation: "Investigations"
+    # docs_dir: docs           # override MkDocs docs_dir
+    # repo_url: https://github.com/org/repo
+    # site_url: https://example.com/docs
+    # theme: readthedocs
 
-author:
-  from_git: true
-  default: ""
+toc:
+  enabled: true  # generate ToC during docz update
+  min_headings: 3  # minimum headings to generate a ToC
