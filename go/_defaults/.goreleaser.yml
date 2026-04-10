@@ -71,7 +71,7 @@ release:
     ```bash
     # Download the appropriate binary for your system
     # Extract and move to your PATH
-    tar -xzf foreg_*.tar.gz
+    tar -xzf app*.tar.gz
     mv forge ~/.local/bin/
     ```
 
