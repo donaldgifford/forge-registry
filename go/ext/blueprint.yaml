@@ -30,6 +30,12 @@ variables:
     choices: ["MIT", "Apache-2.0", "BSD-3-Clause", "none"]
     default: "Apache-2.0"
 
+  - name: go_version
+    description: "Verison of go"
+    type: string
+    required: true
+    validate: "^[a-z][a-z0-9-]*$"
+
 sync:
   managed_files: []
   ignore: []
