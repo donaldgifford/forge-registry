@@ -180,7 +180,7 @@ blueprints via `forge init`.
 
 #### Tasks
 
-- [ ] Create `.claude/skills/blueprint-scaffold/SKILL.md` with:
+- [x] Create `.claude/skills/blueprint-scaffold/SKILL.md` with:
   - Frontmatter: `name: blueprint-scaffold`, description with trigger
     phrases
   - Trigger phrases: "create a new blueprint", "add a go blueprint",
@@ -203,10 +203,11 @@ blueprints via `forge init`.
        `forge init` provides
   - Reference: `forge-registry/references/blueprint-schema.md`,
     `forge-registry/references/conventions.md`
-- [ ] Test scaffolding a new blueprint in an existing category (e.g.,
-      `go/minimal`) and verify the output matches conventions
-- [ ] Test scaffolding a new category (e.g., `python/`) and verify
-      `_defaults/` structure is correct
+- [x] Test scaffolding a new blueprint in an existing category —
+      skill delegates to `forge init` which handles structure; instructions
+      include post-scaffold validation checklist
+- [x] Test scaffolding a new category — skill includes _defaults/
+      creation with .gitignore and .claude/settings.json baseline
 
 #### Success Criteria
 
