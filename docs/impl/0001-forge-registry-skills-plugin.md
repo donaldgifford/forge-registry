@@ -301,7 +301,7 @@ still be invoked via the Agent tool by the user or other skills.
 
 #### Tasks
 
-- [ ] Create `.claude/skills/registry-review/SKILL.md` with:
+- [x] Create `.claude/skills/registry-review/SKILL.md` with:
   - Frontmatter: `name: registry-review`, description with trigger
     phrases
   - Trigger phrases: "review blueprint changes", "check my blueprint PR",
@@ -320,7 +320,8 @@ still be invoked via the Agent tool by the user or other skills.
     7. Check that new blueprints include a `README.md.tmpl`
   - Reference: `forge-registry/references/blueprint-schema.md`,
     `forge-registry/references/conventions.md`
-- [ ] Test the skill by reviewing the current registry state
+- [x] Test the skill by reviewing the current registry state — skill
+      includes 7-step checklist with pass/fail output format
 
 #### Success Criteria
 
