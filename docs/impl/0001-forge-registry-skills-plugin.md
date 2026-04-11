@@ -130,7 +130,7 @@ safe to iterate on without risk of corrupting blueprint files.
 
 #### Tasks
 
-- [ ] Create `.claude/skills/registry-list/SKILL.md` with:
+- [x] Create `.claude/skills/registry-list/SKILL.md` with:
   - Frontmatter: `name: registry-list`, description with trigger phrases
   - Trigger phrases: "list blueprints", "what blueprints exist", "show go
     blueprints", "registry status"
@@ -139,7 +139,7 @@ safe to iterate on without risk of corrupting blueprint files.
     category, name, version, variable count, tags
   - Include the root-level `std/` blueprint (category shown as `(root)`)
   - Optional category filter from `$ARGUMENTS`
-- [ ] Create `.claude/skills/registry-validate/SKILL.md` with:
+- [x] Create `.claude/skills/registry-validate/SKILL.md` with:
   - Frontmatter: `name: registry-validate`, description with trigger
     phrases
   - Trigger phrases: "validate the registry", "lint blueprints", "check
@@ -156,10 +156,11 @@ safe to iterate on without risk of corrupting blueprint files.
     6. YAML files pass yamllint (run `yamllint` if available)
   - Output format: pass/fail per check, with file paths for failures
   - Reference: `forge-registry/references/blueprint-schema.md`
-- [ ] Test `/registry-list` against the existing registry — verify output
-      matches the five known blueprints
-- [ ] Test `/registry-validate` against the existing registry — verify it
-      reports clean (or documents known issues)
+- [x] Test `/registry-list` against the existing registry — verified 5
+      blueprints: go/std, go/ext, rust/std, rust/esp32, std
+- [x] Test `/registry-validate` against the existing registry — yamllint
+      reports 4 warnings (missing document-start on go/std, rust/std,
+      rust/esp32, std); documented in conventions.md as known issue
 
 #### Success Criteria
 
