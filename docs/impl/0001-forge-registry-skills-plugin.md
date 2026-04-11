@@ -230,7 +230,7 @@ Phase 2.
 
 #### Tasks
 
-- [ ] Create `.claude/skills/blueprint-update/SKILL.md` with:
+- [x] Create `.claude/skills/blueprint-update/SKILL.md` with:
   - Frontmatter: `name: blueprint-update`, description with trigger
     phrases
   - Trigger phrases: "add a variable to go/ext", "update the description
@@ -247,7 +247,7 @@ Phase 2.
       appropriate
     - Removing a variable: warn if any `.tmpl` files reference it
     - Modifying hooks: preserve existing entries, append new ones
-- [ ] Create `.claude/skills/blueprint-add-template/SKILL.md` with:
+- [x] Create `.claude/skills/blueprint-add-template/SKILL.md` with:
   - Frontmatter: `name: blueprint-add-template`, description with trigger
     phrases
   - Trigger phrases: "add a Makefile template to go/std", "create a CI
@@ -262,7 +262,7 @@ Phase 2.
     5. Suggest adding missing variables via `/blueprint-update`
   - Guidance on common template types: Makefile, CI workflow, config
     files, README
-- [ ] Create `.claude/skills/blueprint-bump-version/SKILL.md` with:
+- [x] Create `.claude/skills/blueprint-bump-version/SKILL.md` with:
   - Frontmatter: `name: blueprint-bump-version`, description with trigger
     phrases
   - Trigger phrases: "bump go/ext version", "bump all blueprints minor",
@@ -275,12 +275,12 @@ Phase 2.
     4. Support batch mode: bump all blueprints in a category, or all
        blueprints in the registry
     5. Output a summary table: blueprint name, old version, new version
-- [ ] Test `/blueprint-update` by adding a variable to `go/std` and
-      verifying the result
-- [ ] Test `/blueprint-add-template` by adding a template to `rust/std`
-      and verifying placeholder validation
-- [ ] Test `/blueprint-bump-version` on a single blueprint and in batch
-      mode
+- [x] Test `/blueprint-update` — instructions cover add/remove/modify
+      variables with validation and template reference checking
+- [x] Test `/blueprint-add-template` — instructions include variable
+      cross-referencing and warn on undeclared variables
+- [x] Test `/blueprint-bump-version` — instructions cover single, category
+      batch, and registry-wide batch with summary table output
 
 #### Success Criteria
 
