@@ -4,8 +4,10 @@ nav:
         - Overview: adr/README.md
     - Design:
         - Overview: design/README.md
+        - 'DESIGN-0001: Claude Code Skills for Forge Registry Management': design/0001-claude-code-skills-for-forge-registry-management.md
     - Implementation Plans:
         - Overview: impl/README.md
+        - 'IMPL-0001: Forge Registry Skills Plugin': impl/0001-forge-registry-skills-plugin.md
     - Investigations:
         - Overview: investigation/README.md
     - Plans:

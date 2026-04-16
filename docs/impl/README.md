@@ -28,4 +28,9 @@ docz create impl "Your Implementation Title"
 - **Cancelled**: Plan was abandoned
 
 <!-- BEGIN DOCZ AUTO-GENERATED -->
+## All IMPLs
+
+| ID | Title | Status | Date | Author | Link |
+|----|-------|--------|------|--------|------|
+| IMPL-0001 | Forge Registry Skills Plugin | Draft | 2026-04-10 | Donald Gifford | [0001-forge-registry-skills-plugin.md](0001-forge-registry-skills-plugin.md) |
 <!-- END DOCZ AUTO-GENERATED -->
