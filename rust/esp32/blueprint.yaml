@@ -1,3 +1,4 @@
+---
 apiVersion: v1
 name: "rust-esp32"
 description: "Rust ESP32 Repo"
@@ -10,6 +11,11 @@ variables:
     type: string
     required: true
     validate: "^[a-z][a-z0-9-]*$"
+
+  - name: project_description
+    description: "Description of the project"
+    type: string
+    required: true
 
   - name: license
     description: "License type"
