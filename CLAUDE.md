@@ -58,3 +58,19 @@ forge init <category>/<name> --registry .
 
 Then define variables in `blueprint.yaml`, add template files, and leverage
 `_defaults/` for shared config.
+
+## Local Skills
+
+This repo includes Claude Code skills in `.claude/skills/` for registry
+management:
+
+| Slash Command | Description |
+|---------------|-------------|
+| `/forge-registry` | General registry knowledge and quick reference |
+| `/registry-list` | List all blueprints with metadata table |
+| `/registry-validate` | Validate registry structure and blueprint schemas |
+| `/blueprint-scaffold` | Create new categories or blueprints via `forge init` |
+| `/blueprint-update` | Modify blueprint.yaml fields (variables, hooks, sync) |
+| `/blueprint-add-template` | Add .tmpl files with variable cross-referencing |
+| `/blueprint-bump-version` | Semver version bumps (single or batch) |
+| `/registry-review` | Review blueprint changes against conventions |
