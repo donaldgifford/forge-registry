@@ -1,10 +1,10 @@
-# {{ .project_name }} - {{ .project_description }}
+# ${project_name} - ${project_description}
 
 ## Project Variables
 
-PROJECT_NAME  := {{ .project_name }}
-PROJECT_OWNER := {{ .project_owner }}
-DESCRIPTION   := {{ .project_description }}
+PROJECT_NAME  := ${project_name}
+PROJECT_OWNER := ${project_owner}
+DESCRIPTION   := ${project_description}
 PROJECT_URL   := https://github.com/$(PROJECT_OWNER)/$(PROJECT_NAME)
 
 ## Go Variables
@@ -14,7 +14,7 @@ GO_PACKAGE  := github.com/$(PROJECT_OWNER)/$(PROJECT_NAME)
 GOOS        ?= $(shell $(GO) env GOOS)
 GOARCH      ?= $(shell $(GO) env GOARCH)
 
-GOIMPORTS_LOCAL_ARG := -local github.com/{{ .project_owner }}
+GOIMPORTS_LOCAL_ARG := -local github.com/${project_owner}
 
 ## Build Directories
 

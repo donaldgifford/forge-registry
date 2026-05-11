@@ -1,24 +1,20 @@
----
-apiVersion: v1
+apiVersion: v2
 name: "go-std"
 description: "Go Standard Repo"
 version: "0.1.0"
 tags: ["go-std"]
-
 variables:
-  - name: project_name
-    description: "Name of the project"
-    type: string
-    required: true
-    validate: "^[a-z][a-z0-9-]*$"
-
-  - name: project_owner
-    description: "Owner of the project"
-    type: string
-    required: true
-    validate: "^[a-z][a-z0-9-]*$"
-
-  - name: project_description
-    description: "Description of the project"
-    type: string
-    required: true
+    - name: project_name
+      description: "Name of the project"
+      type: string
+      required: true
+      validate: "^[a-z][a-z0-9-]*$"
+    - name: project_owner
+      description: "Owner of the project"
+      type: string
+      required: true
+      validate: "^[a-z][a-z0-9-]*$"
+    - name: project_description
+      description: "Description of the project"
+      type: string
+      required: true
