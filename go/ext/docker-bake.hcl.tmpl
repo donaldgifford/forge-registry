@@ -65,7 +65,7 @@ target "{{ .project_name }}" {
   inherits = ["_common"]
   tags     = ["${REGISTRY}:${TAG}"]
   platforms = [
-    "linux/${BAKE_LOCAL_PLATFORM}",
+    "linux/amd64",
   ]
 }
 
