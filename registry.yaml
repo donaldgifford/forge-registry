@@ -11,7 +11,7 @@ blueprints:
       description: Go Standard Repository
       version: 0.1.0
       tags: []
-      latest_commit: ""
+      latest_commit: 19e1e7331d07bd64ff72f56994c9ed131f112b18
     - name: go/ext
       path: go/ext
       description: Go Extended Repository
@@ -20,7 +20,7 @@ blueprints:
         - go
         - extended
         - makefile
-      latest_commit: ""
+      latest_commit: d8b0ffda5c9a5cf053ca987c6ecd9f013a2dcc6c
     - name: rust/std
       path: rust/std
       description: Rust Standard Repo
@@ -28,7 +28,7 @@ blueprints:
       tags:
         - rust
         - std
-      latest_commit: ""
+      latest_commit: 19e1e7331d07bd64ff72f56994c9ed131f112b18
     - name: rust/esp32
       path: rust/esp32
       description: Rust ESP32 Repo
@@ -36,10 +36,20 @@ blueprints:
       tags:
         - rust
         - esp32
-      latest_commit: ""
+      latest_commit: 19e1e7331d07bd64ff72f56994c9ed131f112b18
     - name: std
       path: std
       description: 'TODO: Add a description'
       version: 0.1.0
       tags: []
+      latest_commit: 19e1e7331d07bd64ff72f56994c9ed131f112b18
+    - name: go-kubebuilder
+      path: go/kubebuilder
+      description: Go Kubernetes operator blueprint (kubebuilder)
+      version: 0.1.0
+      tags:
+        - go
+        - kubebuilder
+        - operator
+        - kubernetes
       latest_commit: ""

@@ -84,6 +84,10 @@ lint-fix: ## Run golangci-lint with auto-fix
 	@ $(MAKE) --no-print-directory log-$@
 	@golangci-lint run --fix ./...
 
+lint-config: ## Verify the golangci-lint configuration
+	@ $(MAKE) --no-print-directory log-$@
+	@golangci-lint config verify
+
 fmt: ## Format code with gofmt and goimports
 	@ $(MAKE) --no-print-directory log-$@
 	@gofmt -s -w .
