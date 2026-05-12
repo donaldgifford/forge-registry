@@ -38,7 +38,7 @@ COVERAGE_OUT := coverage.out
 
 .PHONY: build
 .PHONY: test test-all test-coverage
-.PHONY: lint lint-fix fmt clean
+.PHONY: lint lint-fix lint-config lint-actions fmt clean
 .PHONY: run run-local test-api ci check
 .PHONY: release-check release-local
 
@@ -83,6 +83,14 @@ lint: ## Run golangci-lint
 lint-fix: ## Run golangci-lint with auto-fix
 	@ $(MAKE) --no-print-directory log-$@
 	@golangci-lint run --fix ./...
+
+lint-config: ## Verify the golangci-lint configuration
+	@ $(MAKE) --no-print-directory log-$@
+	@golangci-lint config verify
+
+lint-actions: ## Lint GitHub Actions workflows with actionlint
+	@ $(MAKE) --no-print-directory log-$@
+	@actionlint
 
 fmt: ## Format code with gofmt and goimports
 	@ $(MAKE) --no-print-directory log-$@

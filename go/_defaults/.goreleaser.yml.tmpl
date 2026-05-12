@@ -2,9 +2,9 @@
 version: 2
 
 builds:
-  - id: forge
-    binary: forge
-    main: ./cmd/forge
+  - id: {{ .project_name }}
+    binary: {{ .project_name }}
+    main: ./cmd/{{ .project_name }}
     goos:
       - linux
       - darwin
@@ -16,7 +16,7 @@ builds:
 
 archives:
   - id: default
-    name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}"
+    name_template: '{{ "{{" }} .ProjectName {{ "}}" }}_{{ "{{" }} .Os {{ "}}" }}_{{ "{{" }} .Arch {{ "}}" }}'
     format: "tar.gz"
     files:
       - none*
@@ -29,7 +29,7 @@ signs:
     args:
       - "--batch"
       - "--local-user"
-      - "{{ .Env.GPG_FINGERPRINT }}"
+      - '{{ "{{" }} .Env.GPG_FINGERPRINT {{ "}}" }}'
       - "--output"
       - "${signature}"
       - "--detach-sign"
@@ -57,13 +57,13 @@ changelog:
 
 release:
   github:
-    owner: donaldgifford
-    name: forge
+    owner: {{ .project_owner }}
+    name: {{ .project_name }}
   draft: false
   prerelease: auto
   mode: prepend
   header: |
-    ## Release {{ .Tag }} ({{ .Date }})
+    ## Release {{ "{{" }} .Tag {{ "}}" }} ({{ "{{" }} .Date {{ "}}" }})
 
     ### Installation
 
@@ -71,13 +71,13 @@ release:
     ```bash
     # Download the appropriate binary for your system
     # Extract and move to your PATH
-    tar -xzf app*.tar.gz
-    mv forge ~/.local/bin/
+    tar -xzf {{ .project_name }}*.tar.gz
+    mv {{ .project_name }} ~/.local/bin/
     ```
 
   footer: |
     ---
-    **Full Changelog**: https://github.com/donaldgifford/forge/compare/{{ .PreviousTag }}...{{ .Tag }}
+    **Full Changelog**: https://github.com/{{ .project_owner }}/{{ .project_name }}/compare/{{ "{{" }} .PreviousTag {{ "}}" }}...{{ "{{" }} .Tag {{ "}}" }}
 
 snapshot:
-  version_template: "{{ .Tag }}-dev"
+  version_template: '{{ "{{" }} .Tag {{ "}}" }}-dev'

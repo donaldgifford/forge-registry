@@ -7,6 +7,17 @@
 *.dll
 *.so
 *.dylib
+*.swp
+*.swo
+*~
+
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+bin/*
+Dockerfile.cross
 
 # Test binary, built with `go test -c`
 *.test
@@ -33,3 +44,7 @@ go.work.sum
 
 # Build directories
 build/
+
+# OS files
+.DS_Store
+Thumbs.db
