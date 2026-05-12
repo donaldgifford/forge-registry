@@ -101,6 +101,11 @@ lint-fix:
 lint-config:
     @golangci-lint config verify
 
+# Lint GitHub Actions workflows
+[group('lint')]
+lint-actions:
+    @actionlint
+
 # Format code with gofmt + goimports
 [group('lint')]
 fmt:

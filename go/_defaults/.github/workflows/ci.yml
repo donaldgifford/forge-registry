@@ -37,6 +37,18 @@ jobs:
         with:
           version: v2.11.4
 
+  actionlint:
+    name: Actionlint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Run actionlint
+        shell: bash
+        run: |
+          bash <(curl https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash)
+          ./actionlint -color
+
   test-go:
     name: Test Go
     runs-on: ubuntu-latest
