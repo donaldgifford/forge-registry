@@ -3,7 +3,7 @@ apiVersion: v1
 name: "go-ext"
 description: "Go extended blueprint"
 version: "0.1.0"
-tags: ["go", "extended", "makefile"]
+tags: ["go", "extended"]
 
 variables:
   - name: project_name
