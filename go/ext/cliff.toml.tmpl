@@ -1,8 +1,8 @@
-# git-cliff configuration for {{ .project_name }} root CHANGELOG.
+# git-cliff configuration for ${project_name} root CHANGELOG.
 # https://git-cliff.org/docs/configuration
 #
 # Generated for the whole repo. The chart-only changelog is at
-# charts/{{ .project_name }}/cliff.toml and is invoked with
+# charts/${project_name}/cliff.toml and is invoked with
 # --include-path 'charts/**'.
 
 [changelog]
@@ -34,7 +34,7 @@ trim = true
 render_always = true
 
 postprocessors = [
-  { pattern = '<REPO>', replace = "https://github.com/{{ .project_owner }}/{{ .project_name }}" },
+  { pattern = '<REPO>', replace = "https://github.com/${project_owner}/${project_name}" },
 ]
 
 [git]
@@ -74,5 +74,5 @@ commit_parsers = [
 ]
 
 link_parsers = [
-  { pattern = "#(\\d+)", href = "https://github.com/{{ .project_owner }}/{{ .project_name }}/issues/$1" },
+  { pattern = "#(\\d+)", href = "https://github.com/${project_owner}/${project_name}/issues/$1" },
 ]

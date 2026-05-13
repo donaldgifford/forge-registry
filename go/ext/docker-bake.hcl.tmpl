@@ -1,4 +1,4 @@
-// docker-bake.hcl — multi-arch build pipeline for {{ .project_name }}.
+// docker-bake.hcl — multi-arch build pipeline for ${project_name}.
 //
 // Targets:
 //   - default: local single-arch build (used by `docker buildx bake`)
@@ -10,7 +10,7 @@
 // docker/metadata-action's bake-file outputs.
 
 variable "REGISTRY" {
-  default = "ghcr.io/{{ .project_owner }}/{{ .project_name }}"
+  default = "ghcr.io/${project_owner}/${project_name}"
 }
 
 variable "TAG" {
@@ -22,27 +22,27 @@ variable "VERSION" {
 }
 
 group "default" {
-  targets = ["{{ .project_name }}"]
+  targets = ["${project_name}"]
 }
 
 group "ci" {
-  targets = ["{{ .project_name }}-ci"]
+  targets = ["${project_name}-ci"]
 }
 
 group "release" {
-  targets = ["{{ .project_name }}-release"]
+  targets = ["${project_name}-release"]
 }
 
 target "_common" {
   context    = "."
   dockerfile = "Dockerfile"
   args = {
-    VERSION = "${VERSION}"
+    VERSION = "$${VERSION}"
   }
   labels = {
-    "org.opencontainers.image.source"      = "https://github.com/{{ .project_owner }}/{{ .project_name }}"
+    "org.opencontainers.image.source"      = "https://github.com/${project_owner}/${project_name}"
     "org.opencontainers.image.licenses"    = "Apache-2.0"
-    "org.opencontainers.image.description" = "{{ .project_description }}"
+    "org.opencontainers.image.description" = "${project_description}"
   }
 }
 
@@ -56,14 +56,14 @@ target "_common" {
 // parent's, not extends it).
 target "docker-metadata-action" {
   tags = [
-    "${REGISTRY}:${TAG}",
-    "${REGISTRY}:latest",
+    "$${REGISTRY}:$${TAG}",
+    "$${REGISTRY}:latest",
   ]
 }
 
-target "{{ .project_name }}" {
+target "${project_name}" {
   inherits = ["_common"]
-  tags     = ["${REGISTRY}:${TAG}"]
+  tags     = ["$${REGISTRY}:$${TAG}"]
   platforms = [
     "linux/amd64",
   ]
@@ -73,13 +73,13 @@ target "{{ .project_name }}" {
 // GitHub's ubuntu-latest runners take ~25 min and dominate PR feedback
 // time. Multi-arch coverage is restored in the release target, which
 // runs only on tag pushes.
-target "{{ .project_name }}-ci" {
+target "${project_name}-ci" {
   inherits  = ["_common"]
-  tags      = ["${REGISTRY}:${TAG}-ci"]
+  tags      = ["$${REGISTRY}:$${TAG}-ci"]
   platforms = ["linux/amd64"]
 }
 
-target "{{ .project_name }}-release" {
+target "${project_name}-release" {
   inherits = ["_common", "docker-metadata-action"]
   // tags intentionally omitted — they come from docker-metadata-action
   // (defaults for local bake; CI overrides via metadata-action).
