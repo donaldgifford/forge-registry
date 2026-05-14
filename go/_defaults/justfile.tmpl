@@ -1,12 +1,12 @@
-# {{ .project_name }} — task runner
+# ${project_name} — task runner
 #
 # Project automation via just. Use either the Makefile or this justfile —
 # both expose the same target set with equivalent behavior.
 
 set shell := ["bash", "-eu", "-o", "pipefail", "-c"]
 
-project_name      := "{{ .project_name }}"
-project_owner     := "{{ .project_owner }}"
+project_name      := "${project_name}"
+project_owner     := "${project_owner}"
 go_package        := "github.com/" + project_owner + "/" + project_name
 build_dir         := "build"
 bin_dir           := build_dir + "/bin"
@@ -28,7 +28,7 @@ _default:
 [group('build')]
 build: build-core
 
-# Build the core CLI binary into build/bin/{{ .project_name }}
+# Build the core CLI binary into build/bin/${project_name}
 [group('build')]
 build-core:
     @mkdir -p {{ "{{" }} bin_dir {{ "}}" }}

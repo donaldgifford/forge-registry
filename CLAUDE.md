@@ -25,22 +25,30 @@ rust/                   # Rust blueprints
 └── esp32/              # Rust ESP32 embedded blueprint
 ```
 
-Each blueprint has a `blueprint.yaml` defining its name, variables, hooks, sync
-rules, and rename mappings. Templates use Go template syntax
-(`{{ .variable_name }}`).
+Each blueprint has a `blueprint.hcl` defining its name, variables, hooks, sync
+rules, and rename mappings. Templates use HCL2 (`hashicorp/hcl/v2`) syntax:
+`${variable_name}` for substitution, `%{ if … ~}` for directives. The registry
+index is `registry.hcl` at the repo root.
 
 ## Key Conventions
 
-- **Blueprint variables** are defined in `blueprint.yaml` with name, type,
-  validation regex, and optional choices/defaults
-- **Template files** use `.tmpl` extension and Go template syntax
+- **Blueprint variables** are defined in `blueprint.hcl` as `variable "name"
+  { type = "string", description = …, default = …, required = … }` blocks.
+- **Template files** use `.tmpl` extension and HCL2 syntax. Files without
+  `.tmpl` are copied verbatim and never parsed by the engine.
 - **`_defaults/` directories** provide inherited files — category-level defaults
-  override registry-level defaults
-- **`rename:` in blueprint.yaml** maps template directory names (e.g.,
-  `{{project_name}}/`) to their output location (`.`)
-- YAML files require document start marker (`---`) per yamllint config
-- YAML indentation: 2 spaces
-- Markdown prose wrapped at 80 characters (prettier)
+  override registry-level defaults (last wins).
+- **`rename` blocks in blueprint.hcl** map template directory names (e.g.,
+  `${project_name}/`) to their output location (`.`). The template directory
+  name itself uses `${project_name}` syntax, not `{{project_name}}`.
+- **Escape `${...}` for downstream tools** — goreleaser, Docker buildx ARGs,
+  shell parameter expansion, GitHub Actions expressions all use `${name}` as
+  their own substitution syntax. Write `$${name}` in templates so HCL2 emits
+  a literal `${name}` for the downstream consumer. Forge variables use
+  bare `${name}`.
+- YAML files require document start marker (`---`) per yamllint config.
+- YAML indentation: 2 spaces.
+- Markdown prose wrapped at 80 characters (prettier).
 
 ## Linting
 
@@ -53,11 +61,13 @@ This repo has no build step or tests. Quality is enforced via config linters:
 ## Adding a New Blueprint
 
 ```bash
-forge init <category>/<name> --registry .
+forge registry blueprint <category>/<name> --registry-dir .
 ```
 
-Then define variables in `blueprint.yaml`, add template files, and leverage
-`_defaults/` for shared config.
+Then define variables in `blueprint.hcl`, add template files (using HCL2
+syntax with `.tmpl` extension), and leverage `_defaults/` for shared config.
+`forge registry update --registry-dir .` keeps `registry.hcl` in sync after
+edits.
 
 ## Local Skills
 
@@ -69,8 +79,8 @@ management:
 | `/forge-registry` | General registry knowledge and quick reference |
 | `/registry-list` | List all blueprints with metadata table |
 | `/registry-validate` | Validate registry structure and blueprint schemas |
-| `/blueprint-scaffold` | Create new categories or blueprints via `forge init` |
-| `/blueprint-update` | Modify blueprint.yaml fields (variables, hooks, sync) |
+| `/blueprint-scaffold` | Create new categories or blueprints via `forge registry blueprint` |
+| `/blueprint-update` | Modify blueprint.hcl fields (variables, hooks, sync) |
 | `/blueprint-add-template` | Add .tmpl files with variable cross-referencing |
 | `/blueprint-bump-version` | Semver version bumps (single or batch) |
 | `/registry-review` | Review blueprint changes against conventions |
