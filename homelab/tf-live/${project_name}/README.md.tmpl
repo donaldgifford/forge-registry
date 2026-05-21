@@ -1,0 +1,39 @@
+# ${project_name}
+
+${project_description}
+
+Terragrunt live config consumed by Atlantis on every PR. Generated from
+`tmpl/` + `blueprints/` + `configs/` via `boilerplate` — do NOT
+hand-edit `infra-live/`.
+
+## Layout
+
+```
+root.hcl                    # terragrunt root config
+common.hcl                  # shared inputs / remote_state config
+infra-live/                 # GENERATED — terragrunt projects
+tmpl/                       # boilerplate template sources
+blueprints/                 # boilerplate blueprints
+configs/                    # boilerplate var files
+atlantis.yaml               # GENERATED — regenerate via terragrunt-atlantis-config
+```
+
+## Workflow
+
+1. Edit `tmpl/` / `blueprints/` / `configs/`.
+2. Regenerate `infra-live/` via `just bp run <blueprint> <var-file>`.
+3. Regenerate `atlantis.yaml`:
+   ```
+   terragrunt-atlantis-config generate \
+     --root . --filter infra-live \
+     --workflow terragrunt --autoplan --parallel \
+     --create-project-name --output atlantis.yaml
+   ```
+4. Commit + open PR. Atlantis posts plan comment.
+5. Review + `atlantis apply` + merge.
+
+## TODO
+
+- Fill in `root.hcl` + `common.hcl` with terragrunt boilerplate
+  (remote_state backend, generate provider blocks, default inputs).
+- Wire up `justfile` recipes (`just talos`, `just vms`, `just packer`).

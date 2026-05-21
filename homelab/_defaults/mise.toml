@@ -1,0 +1,9 @@
+[tools]
+# Task runner + linters / formatters shared across all homelab repos.
+just = "latest"
+markdownlint-cli2 = "0.18.1"
+yamlfmt = "0.20.0"
+yamllint = "1.37.1"
+prettier = "3.7.4"
+
+# Per-repo: add type-specific tools (terraform / terragrunt / packer / kubectl / etc.)

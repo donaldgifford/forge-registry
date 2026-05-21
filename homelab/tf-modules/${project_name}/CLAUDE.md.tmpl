@@ -1,0 +1,69 @@
+# CLAUDE.md
+
+Per-repo orientation for `${project_org}/${project_name}` — Terraform
+modules consumed by `${project_org}/tf-live` via SemVer git tags.
+
+## Homelab universals
+
+- **Toolchain pinned via `mise.toml`**; task runner `just`.
+- **`.env` is a [1Password Developer Environment](https://developer.1password.com/docs/environments/local-env-file)** file. `op run --env-file=.env -- <cmd>`. Never `source .env`.
+- **`docz create <type> "Title"`** for new docs (ADR/RFC/DESIGN/IMPL/INV).
+- **Capture cross-cutting surprises in the active IMPL's Follow-Ups**.
+- **`grep` is `rg`** — drop `-E`.
+
+## Repo layout
+
+```
+modules/<name>/
+  main.tf
+  variables.tf
+  outputs.tf
+  versions.tf
+  README.md            # generated via terraform-docs
+  examples/
+.terraform-docs.yml    # global config
+.terraform-version     # pin (mirrored from mise.toml)
+```
+
+One module per directory under `modules/`. Modules are independently
+versioned: SemVer git tags consumed by Terragrunt:
+
+```hcl
+source = "git::ssh://git@${git_host}/${project_org}/${project_name}.git//modules/<name>?ref=v0.0.0"
+```
+
+## Conventions
+
+- **`versions.tf` lists required_providers** with conservative ranges
+  (`>= 5.30.0, < 7.0` for `hashicorp/aws` — Pod Identity floor; see
+  `${project_org}/docs` runbooks).
+- **`terraform-docs` regenerated on every module change**: `just docs`
+  (or pre-commit hook). Stale READMEs block PR review.
+- **Bump SemVer on every breaking-change PR**. Minor for new vars
+  with defaults; patch for bug fixes; major for removed/renamed
+  vars/outputs. Tags drive Terragrunt consumption in tf-live.
+- **No state, no providers configured in modules** — modules are
+  consumed by Terragrunt which owns state + provider config.
+- **`tflint` + `terraform fmt -check`** in CI. `tfsec` for security
+  scanning (optional but recommended).
+
+## Known issues
+
+- **1Password Terraform provider shells out to `op` CLI** for version
+  detection EVEN when `service_account_token` is set. Modules using the
+  `1password/onepassword` provider default `onep_cli_path =
+  "/opt/homebrew/bin/op"` (macOS Homebrew path). Atlantis works around
+  this by installing `op` in the init container and mounting it at both
+  `/usr/local/bin/op` and `/opt/homebrew/bin/op`. Long-term: flip the
+  default to `op` (PATH lookup).
+- **OpenTofu registry duplication for `ubiquiti-community/unifi`**:
+  `tofu init` fails with `authentication signature from unknown issuer`.
+  Module asks for `v0.41.3` (terraform registry, signed) but OpenTofu
+  also tries `v0.41.25` from `registry.opentofu.org` (self-signed,
+  different key). Local cached-provider runs dodge it; Atlantis cold
+  init hits it. Affects 12+ proxmox VM modules.
+
+## See also
+
+- `${project_org}/tf-live` — consumer of these modules; Atlantis runs the
+  plan/apply against the homelab state in Garage S3.

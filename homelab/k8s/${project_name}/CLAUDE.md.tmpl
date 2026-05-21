@@ -1,0 +1,181 @@
+# CLAUDE.md
+
+Per-repo orientation for `${project_org}/${project_name}` — ArgoCD-managed
+Kubernetes manifests for the homelab cluster.
+
+## Homelab universals
+
+- **Toolchain pinned via `mise.toml`**; task runner `just` (positional dispatch).
+- **`.env` is a [1Password Developer Environment](https://developer.1password.com/docs/environments/local-env-file)** file. `op run --env-file=.env -- <cmd>`. Never `source .env`.
+- **`OnePasswordItem` CRs** reference items via `vaults/<id>/items/<id>`.
+- **`docz create <type> "Title"`** for ADR / RFC / DESIGN / IMPL / INV.
+- **Trunk-based for Argo work**: commit straight to `main` — PR review delays sync.
+- **Capture cross-cutting surprises in the active IMPL's Follow-Ups**; no silent workarounds.
+- **`grep` is `rg`** — regex is the default. Drop `-E`.
+- **Verify CRD schema, don't grep rendered YAML** — `kubectl explain <crd>.spec --recursive`.
+- **Alpha-API debug**: when one schema error reveals the next, dump the full schema.
+
+## Repo layout
+
+```
+apps/<group>/<app>/              # per-app kustomize + helmCharts
+apps/<group>/application-set.yaml
+infra/<group>/<app>/             # cluster-level infrastructure
+```
+
+ArgoCD watches `${project_org}/${project_name}` and syncs everything under
+`apps/*` + `infra/*` to the homelab cluster.
+
+## Deployment conventions
+
+- **Kustomize `helmCharts` (not raw helm)** for chart-based deploys.
+  Chart pinning in `kustomization.yaml`; overrides in `values.yaml`.
+- **OCI chart URLs**: `oci://ghcr.io/org/charts` (kustomize appends the
+  chart name — do NOT include it in the repo field).
+- **ApplicationSets**: Go-template (`goTemplate: true`) with
+  `.path.basename` (dot prefix). New AppSets MUST use goTemplate.
+- **Gateway API**: HTTPRoute for HTTP, GRPCRoute for gRPC. TCPRoute is
+  NOT supported by Cilium — use a LoadBalancer Service with BGP labels.
+- **`GrafanaDashboard` CRs**: custom dashboards follow the alloy-external
+  pattern. JSON in `data/<name>.json` next to the manifest;
+  `configMapGenerator` with `disableNameSuffixHash: true` bakes it into
+  a ConfigMap; the CR references via `configMapRef`. Cross-namespace
+  pickup is on (`allowCrossNamespaceImport: true`,
+  `instanceSelector: app=grafana`).
+- **Image pinning + Renovate**: every chart bump pins the app image
+  explicitly in `values.yaml` (or the resource CR for non-chart deploys)
+  with `# renovate: image=<repo>` one line above the tag. Chart-version
+  bump and image-pin land as separate commits.
+- **Pre-flight snapshots**: before any IMPL phase that touches CRDs or
+  shared cluster state, snapshot affected resources to
+  `docs/impl/snapshots/<impl>-<date>-<scope>.yaml` (use
+  `kubectl get … -o yaml --show-managed-fields=false`).
+
+## Storage gotchas
+
+- **RWO PVC + single-replica Deployment**: default `strategy: Recreate`,
+  not RollingUpdate. RollingUpdate deadlocks because the new pod can't
+  attach the volume while the old one still holds it.
+- **ext4 `emergency_ro` on democratic-csi iSCSI**: a single failed write
+  (TrueNAS blip, controller reset) can trigger `JBD2: I/O error` →
+  ext4 `errors=remount-ro` flips the FS read-only. Pod keeps running
+  on cached RW state until a scheduled write surfaces it
+  (`IOException: Read-only file system`). Diagnose via `/proc/mounts`
+  containing `emergency_ro`. **Recovery**: pause ArgoCD auto-sync →
+  `kubectl scale --replicas=0` (CSI logs out iSCSI session) → scale back
+  to 1 (kernel runs journal recovery on re-stage) → restore auto-sync.
+  Writes since the original event are lost.
+- **Pause/unpause sync without an AppSet revert**: AppSet template
+  overrides direct App patches. Patch the AppSet, not the App, when
+  you need a transient `syncPolicy: automated: null`.
+
+## CNPG (Postgres) gotchas
+
+- **Inline `spec.backup.barmanObjectStore` is deprecated in 1.27, REMOVED
+  in 1.28**. Migration target: `plugin-barman-cloud` chart. Per-cluster,
+  atomic single-commit: drop `spec.backup.*`, add a `spec.plugins[]`
+  entry referencing an `ObjectStore` CR. Triggers a rolling restart.
+- **Path-style S3 (Garage/MinIO) is NOT a boto3 env var**. The actual
+  knob is `--addressing-style=path` plumbed through
+  `data.additionalCommandArgs` / `wal.archiveAdditionalCommandArgs` /
+  `wal.restoreAdditionalCommandArgs` on the `ObjectStore` CR (asymmetric
+  field names per sub-block). Works because the plugin sidecar bundles
+  barman 3.18.0+. Garage also needs
+  `AWS_REQUEST_CHECKSUM_CALCULATION=when_required` +
+  `AWS_RESPONSE_CHECKSUM_VALIDATION=when_required` on
+  `instanceSidecarConfiguration.env`.
+- **`ensure_sufficient_disk_space` guard**: when PVCs hit ~100% the
+  operator blocks ALL reconciliation including its own PVC expansion.
+  `cnpg.io/hibernation: "on"` won't help — the guard runs first.
+  Recovery: bypass operator, patch PVCs directly via `kubectl patch
+  pvc` (volume expansion via CSI), `kubectl delete pod` to force FS
+  resize on next mount.
+- **CNPG `Pooler` + ArgoCD flapping** is expected — selfHeal reapplies
+  Pooler CR, CNPG recreates child resources. Don't chase.
+
+## Monitoring gotchas
+
+- **`kube-prometheus-stack` CRD upgrades** need
+  `kubectl apply --server-side --force-conflicts` because Helm previously
+  owned the field manager on those CRDs. Plain `kubectl apply` fails
+  with field-manager conflicts. Skip intermediate operator versions —
+  CRDs are forward-compatible, apply only the target version.
+- **Grafana 13+ rejects default `[rendering]renderer_token`** in
+  production — pod CrashLoopBackOff. Set a non-default token on BOTH
+  the Grafana CR (`spec.config.rendering.renderer_token`) AND the
+  `grafana-image-renderer` Deployment (`AUTH_TOKEN` env).
+- **`alloy` DaemonSet has no positions persistence**. The chart mounts
+  only the config configmap, no `/var/lib/alloy` hostPath. Every alloy
+  pod restart re-reads logs from the kubelet API; Loki rejects entries
+  older than `reject_old_samples_max_age` (168h). Visible as transient
+  dropped-entry flood; drains in 2–5 min. Fix is hostPath for
+  `/var/lib/alloy`.
+- **Atlantis exports Prometheus summaries, not histograms** — quantile
+  buckets return `NaN` at low volume. Use
+  `rate(metric_sum[5m]) / rate(metric_count[5m])` for avg-duration panels.
+
+## Atlantis (deployed here, owned by tf-live) gotchas
+
+- **Init container needs `securityContext.runAsUser: 0`** — StatefulSet
+  sets `runAsUser: 100`, blocks `apk add`.
+- **`ATLANTIS_WRITE_GIT_CREDS`** is auto-injected when `githubApp` is set;
+  don't also set it in `environment` block (ServerSideApply rejects).
+- **`vcsSecretName`** uses a single secret for both `key.pem` (volume
+  mount) AND `github_secret` (env var) — can't split across two secrets.
+- **GitHub App `events: []` silent drop**: webhooks arrive with 200 OK
+  but never trigger autoplan unless the App is subscribed to
+  `pull_request` / `issue_comment` / `pull_request_review` / `push`.
+  UI-only at `https://github.com/settings/apps/<slug>` → Permissions &
+  events. Cannot be set via the API.
+- **chart `githubApp.id`** must be quoted string (`"3354082"`) to avoid
+  scientific-notation rendering.
+
+## OTel / span_metrics gotchas
+
+- **Langfuse 3.172+ emits OTel TRACES only, NOT metrics**. For RED
+  dashboards, use the otel-collector's `span_metrics` connector to
+  synthesize rate/error/duration from the trace stream.
+- **`span_metrics` traps**: `service.name` is a built-in dimension —
+  listing it explicitly under `dimensions` fails validation.
+  `resource_to_telemetry_conversion: true` on the prometheus exporter
+  is a cardinality bomb. Always filter `kind == Server` before
+  span_metrics, otherwise outbound HTTP client spans (URL paths with
+  UUIDs) explode series count. If the collector forwards traces to the
+  service that produced them, filter `resource.service.name` BEFORE
+  tail_sampling to break the feedback loop.
+
+## ClickHouse (langfuse namespace) gotchas
+
+- **ClickHouse Inc. operator chart `clickhouse-operator-helm`** ships a
+  `v1alpha1` CRD set NOT API-compatible with the Altinity
+  `ClickHouseInstallation` shape. Key traps for `ClickHouseCluster`:
+  - Group is `clickhouse.com`, not `clickhouse.altinity.com`.
+  - `defaultUserPassword`, `extraConfig`, `extraUsersConfig`, `logger`,
+    `tls` nest under `spec.settings`, NOT at `spec` top level.
+  - `containerTemplate.image` is structured
+    `{repository, tag, hash}`, not a string. NO `name` field — it's a
+    singular spec, not a container list.
+  - `podTemplate` has NO `containers:` slot, only `initContainers`.
+    Sidecars (e.g. clickhouse-backup) run as standalone Deployments.
+  - Verify with `kubectl explain chc.spec --recursive`, not chart YAML.
+
+## Other recurring gotchas
+
+- **ArgoCD repo-server connection drops** periodically — restart
+  application controller + repo-server.
+- **Technitium DNS blocks cert-manager ACME DNS-01** — set
+  `--dns01-recursive-nameservers=1.1.1.1:53` +
+  `--dns01-recursive-nameservers-only=true` in cert-manager args.
+- **MySQL Docker image only runs init on empty data dir** — password
+  rotations without PVC reset → credentials mismatch.
+- **Forgejo runner chart (wrenix)** is unmaintained — set
+  `knownLastVersion: true` in chart values.
+
+## See also
+
+- `${project_org}/tf-live` — Atlantis is deployed *here* but operated
+  *there* (PR comments).
+- `${project_org}/tf-modules` — manifests reference modules via
+  `git::ssh://...?ref=v0.0.0`.
+- `${project_org}/charts` — local charts consumed by `helmCharts` here.
+- `${project_org}/docs` — cross-cutting docs, runbooks, network maps.

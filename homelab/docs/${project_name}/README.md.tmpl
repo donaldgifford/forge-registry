@@ -1,0 +1,28 @@
+# ${project_name}
+
+${project_description}
+
+Docusaurus site that aggregates `docs/` from every homelab repo at build
+time via the [`docusaurus-plugin-content-docs-remote`](https://www.npmjs.com/package/docusaurus-plugin-content-docs-remote)
+plugin (or equivalent). No committed mirror, no sync workflow — source
+of truth stays in each originating repo.
+
+## Layout
+
+```
+docusaurus.config.js   # site config + remote-content sources
+docs/                  # native pages (cross-cutting docs)
+src/                   # custom React components / theming
+package.json
+```
+
+## TODO
+
+- Settle on Docusaurus vs alternatives (VitePress, Astro Starlight).
+  Assumption today is Docusaurus.
+- Fill `docusaurus.config.js` with the 7 `homelab/*` + 1 `github/*`
+  repo URLs to aggregate.
+- Decide on auth for private forgejo repo content fetching (PAT in CI
+  secret? deploy keys? OAuth-flow at build time?).
+- Wire up deploy target (gh-pages? `homelab/k8s` ingress?
+  `docs.fartlab.dev`?).

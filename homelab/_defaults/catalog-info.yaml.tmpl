@@ -1,0 +1,18 @@
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: ${project_name}
+  title: ${project_name}
+  description: ${project_description}
+  annotations:
+    backstage.io/source-location: url:https://${git_host}/${project_org}/${project_name}
+    backstage.io/techdocs-ref: "dir:."
+  tags:
+    - homelab
+  namespace: default
+spec:
+  lifecycle: production
+  type: service
+  owner: ${project_org}
+  system: homelab

@@ -1,0 +1,24 @@
+# ${project_name}
+
+${project_description}
+
+ArgoCD-managed Kubernetes manifests for the homelab cluster.
+
+## Layout
+
+```
+apps/<group>/<app>/                # per-app kustomization (with helmCharts)
+apps/<group>/application-set.yaml  # ApplicationSet for the group
+infra/<group>/<app>/               # cluster-level infrastructure
+```
+
+## Conventions
+
+- Kustomize `helmCharts` for chart-based deploys; raw manifests otherwise.
+- OCI chart URLs as `oci://...` WITHOUT the chart name suffix (kustomize
+  appends it).
+- ApplicationSets use `goTemplate: true` and `.path.basename`.
+- Image pinning + `# renovate: image=<repo>` comments on the line above
+  each tag.
+
+See `docs/` for the full convention reference.

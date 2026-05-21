@@ -1,0 +1,62 @@
+# CLAUDE.md
+
+Per-repo orientation for `${project_org}/${project_name}` — non-IaC,
+non-k8s homelab configuration (Talos, network, Proxmox, servers).
+
+## Homelab universals
+
+- **Toolchain pinned via `mise.toml`**; task runner `just`.
+- **`.env` is a [1Password Developer Environment](https://developer.1password.com/docs/environments/local-env-file)** file. `op run --env-file=.env -- <cmd>`. Never `source .env`.
+- **`docz create <type> "Title"`** for new docs.
+- **Capture cross-cutting surprises in the active IMPL's Follow-Ups**.
+- **`grep` is `rg`** — drop `-E`.
+
+## Repo layout
+
+```
+talos/                # Talos node configs, version pins, extension manifests
+network/              # network topology, switch configs, VLAN/subnet docs
+proxmox/              # Proxmox host config, storage notes, cluster layout
+servers/              # bare-metal server inventory + provisioning notes
+```
+
+## Conventions
+
+- **This is the catch-all for "config that isn't k8s manifests or
+  Terraform"**. If it could live in `${project_org}/tf-live` (i.e. it
+  belongs in `infra-live/`), put it there instead. This repo is for
+  source-of-truth notes, manifests, and bootstrap material consumed by
+  *humans* or by tf-live regeneration recipes.
+- **Talos extensions / version pins** drive
+  `${project_org}/tf-live`'s Talos VM templating. Pin Talos version
+  + extension SHAs here; tf-live's boilerplate templates read from this
+  repo's `talos/versions.yaml` (or equivalent).
+- **Network topology** is documented (not generated). `network/` holds
+  Mermaid diagrams + switch config exports + VLAN/subnet allocations.
+  Cross-link from `${project_org}/docs` for visibility.
+- **Server inventory** in `servers/` mirrors physical reality: model,
+  serial, role, last-touched. Updated when hardware changes —
+  Ansible-style automation lives in `tf-live` if/when it shows up.
+
+## Workflow
+
+- **For Talos node config changes**: edit `talos/` here, then
+  regenerate `infra-live/talos/*` via
+  `cd ../tf-live && just talos <role>`. The boilerplate templates pull
+  pinned versions/extensions from this repo via file:// reference.
+- **For network changes**: document first (PR to this repo), then apply
+  via Technitium / Unifi UI (or terraform-provider-unifi from tf-live).
+- **For new physical hardware**: add to `servers/inventory.md`, then
+  decide whether it joins Proxmox (`proxmox/`), Talos
+  (`talos/cluster-membership.md`), or stays standalone.
+
+## Known issues
+
+- *(none recorded yet — file them in IMPL Follow-Ups as they surface)*
+
+## See also
+
+- `${project_org}/tf-live` — consumer of version pins + topology here.
+- `${project_org}/k8s` — Talos-side networking gotchas (Cilium Gateway
+  API, Tailscale Funnel) live there.
+- `${project_org}/docs` — public-facing network maps + runbooks.

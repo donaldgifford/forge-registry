@@ -1,0 +1,102 @@
+# CLAUDE.md
+
+Per-repo orientation for `${project_org}/${project_name}` — Terragrunt
+live config + boilerplate templates. Plan/apply runs through Atlantis.
+
+## Homelab universals
+
+- **Toolchain pinned via `mise.toml`**; task runner `just` (positional dispatch).
+- **`.env` is a [1Password Developer Environment](https://developer.1password.com/docs/environments/local-env-file)** file. `op run --env-file=.env -- <cmd>`. Never `source .env`.
+- **`docz create <type> "Title"`** for new docs.
+- **Capture cross-cutting surprises in the active IMPL's Follow-Ups**.
+- **`grep` is `rg`** — drop `-E`.
+
+## Repo layout
+
+```
+root.hcl                    # terragrunt root config (remote_state, generate blocks)
+infra-live/                 # generated terragrunt config (DO NOT hand-edit)
+  <env>/<region>/<scope>/<module>/
+    terragrunt.hcl
+tmpl/                       # boilerplate source templates
+blueprints/                 # boilerplate blueprint sources
+configs/                    # boilerplate var files
+atlantis.yaml               # generated via terragrunt-atlantis-config
+.env.example                # 1P op:// references
+```
+
+State lives in Garage S3 at `s3://terraform-state/...` (HMAC creds in
+1Password). Local creds resolve via `op run`.
+
+## Workflow
+
+### Infra changes
+
+1. Edit `tmpl/**` or `blueprints/**` (or directly in `modules/**` if it's
+   a local module; prefer `${project_org}/tf-modules` SemVer tags).
+2. Regenerate `infra-live/` via the appropriate just recipe — e.g.
+   `just talos workers`, `just vms fatman`, `just homelab cluster`,
+   `just packer talos beelink`. Or `just bp run <blueprint> <var-file>`.
+3. Commit, open a PR.
+4. Atlantis posts a plan comment for every project whose
+   `when_modified` matches.
+5. Review, comment `atlantis apply`, merge.
+
+### Local sanity checks
+
+- `just tg plan <path>` — wraps `terragrunt plan` with `op run` for creds.
+- `just tg validate <path>` — same, for `terragrunt validate`.
+- `just tg drift` — sweeps `infra-live/` with `terragrunt plan -no-color`.
+
+### Regenerating `atlantis.yaml`
+
+```sh
+terragrunt-atlantis-config generate \
+  --root . --filter infra-live \
+  --workflow terragrunt --autoplan --parallel \
+  --create-project-name --output atlantis.yaml
+```
+
+Run after adding a new infra-live project.
+
+## Conventions
+
+- **No hand-edits to `infra-live/`** — always regenerate via boilerplate.
+  Stale `infra-live/` content (manually-edited) is the #1 cause of
+  Atlantis drift surprises.
+- **Module references** point at SemVer tags from
+  `${project_org}/tf-modules`:
+  ```hcl
+  terraform {
+    source = "git::ssh://git@${git_host}/${project_org}/tf-modules.git//modules/<name>?ref=v0.0.0"
+  }
+  ```
+- **Atlantis plan/apply via PR comments**. Direct `terragrunt apply`
+  against production state is allowed but rare — Atlantis is the
+  audit trail.
+
+## Known issues
+
+- **1Password Terraform provider shells out to `op` CLI** even when
+  `service_account_token` is set. Modules default `onep_cli_path =
+  "/opt/homebrew/bin/op"`. Atlantis installs `op` at both
+  `/usr/local/bin/op` and `/opt/homebrew/bin/op` to cover.
+- **OpenTofu registry duplication for `ubiquiti-community/unifi`** —
+  cold init fails with `authentication signature from unknown issuer`.
+  Affects 12+ proxmox VM modules. Local cached-provider runs dodge it.
+- **Atlantis GitHub App `events: []` silent drop**: webhooks arrive
+  with 200 OK but never trigger autoplan unless the App is subscribed
+  to `pull_request` / `issue_comment` / `pull_request_review` /
+  `push`. UI-only at GitHub App settings. Cannot be set via API.
+- **Path-style S3 (Garage) is NOT a boto3 env var**. For Terraform's
+  S3 backend it's the `force_path_style = true` (or `use_path_style`
+  on newer providers) attribute in the `remote_state.config` block of
+  `root.hcl`, NOT an env var.
+
+## See also
+
+- `${project_org}/tf-modules` — module sources (SemVer tags).
+- `${project_org}/k8s` — Atlantis runs here; deployment + chart-level
+  gotchas live there.
+- `${project_org}/docs` — runbooks (Atlantis config & testing,
+  EKS Pod Identity) and cross-cutting context.

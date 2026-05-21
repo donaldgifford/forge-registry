@@ -1,0 +1,16 @@
+# TODO: tune for the module shape you settle on.
+# See https://terraform-docs.io/user-guide/configuration/
+formatter: markdown table
+sections:
+  show:
+    - requirements
+    - providers
+    - inputs
+    - outputs
+output:
+  file: README.md
+  mode: inject
+  template: |-
+    <!-- BEGIN_TF_DOCS -->
+    {{ .Content }}
+    <!-- END_TF_DOCS -->

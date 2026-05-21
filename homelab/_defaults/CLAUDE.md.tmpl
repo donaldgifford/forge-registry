@@ -1,0 +1,90 @@
+# CLAUDE.md
+
+Per-repo orientation for `${project_org}/${project_name}`. Cross-cutting
+context lives in [homelab/docs](https://${git_host}/${project_org}/docs);
+this file documents what's universal to every homelab repo plus what's
+specific to this one. Type-specific content is appended below the
+"Repo-specific" marker.
+
+## Homelab universals (apply to every homelab repo)
+
+### Toolchain
+
+- **Pinned via `mise.toml`**. Run `mise install` before anything.
+- **Task runner: `just`**. `just` (no args) shows the menu. Recipes use
+  positional dispatch (`just packer talos beelink`, not
+  `just packer-talos-beelink`).
+
+### Secrets
+
+- **`.env` is a [1Password Developer Environment](https://developer.1password.com/docs/environments/local-env-file) file**.
+  `OP_SERVICE_ACCOUNT_TOKEN` is a literal value; everything else is an
+  `op://` reference resolved at command time by
+  `op run --env-file=.env -- <cmd>`. See `.env.example`.
+- **Never `source .env`** — it loads the literal `op://...` strings,
+  which is not what tools want.
+- **`OnePasswordItem` CRs** point to 1Password items via
+  `vaults/<id>/items/<id>`. Get IDs via
+  `op item get <name> --format json`.
+
+### Documentation
+
+- **`docz create <type> "Title"`** for ADR / RFC / DESIGN / IMPL / INV.
+  Handles frontmatter, README index, mkdocs nav.
+- **Repo-local docs live in `docs/`**; cross-cutting topics (runbooks,
+  network topology, storage guides) live in
+  [homelab/docs](https://${git_host}/${project_org}/docs).
+- **Backstage TechDocs**: `catalog-info.yaml` registers this repo as a
+  Component with `backstage.io/techdocs-ref: dir:.`. mkdocs builds the
+  site; Backstage renders it.
+
+### Conventions (apply across all homelab repos)
+
+- **Small, reversible commits** beat bundled PRs. Roll back by reverting.
+- **For Argo-synced manifests**: commit straight to `main` (trunk-based).
+  PR review delays sync — for live cluster state, that's worse than a
+  direct push. Other manifest types follow normal PR flow.
+- **Capture cross-cutting surprises in the active IMPL's Follow-Ups
+  section** — don't silently work around a bug and move on.
+- **Plans first for non-trivial work** — write an IMPL or DESIGN doc,
+  get review, then implement.
+- **`labels.yaml` + `gitea-label-sync`** keeps issue/PR labels
+  canonical across the homelab fleet. Forgejo repos use
+  `--platform=forgejo`; `homelab-tools` uses `--platform=github`.
+- **Renovate** manages dep updates. Custom regex managers fire on
+  `mise.toml`, `docker-bake.hcl`, helm `Chart.yaml`, `.typ` — annotate
+  pinned versions with `# renovate: image=<repo>` (or equivalent) one
+  line above the version literal.
+- **Linters**: `yamllint` + `markdownlint-cli2` + `prettier` + (where
+  relevant) `tflint` / `checkmake`. Run via `just lint`.
+
+### Operating notes (universal gotchas)
+
+- **`grep` is `rg`**. The user aliases `grep` → `ripgrep`; regex is the
+  default. Drop `-E` from commands.
+- **Verify CRD schema, don't grep rendered YAML**. Use
+  `kubectl explain <crd>.spec --recursive` or
+  `kubectl get crd <name> -o jsonpath='{...}'` against the live CRD.
+  Reading chart example YAML is brittle and frequently wrong for
+  alpha APIs.
+- **Alpha-API debug loop discipline**: when one schema error reveals
+  the next, stop and dump the full schema. Don't iterate one field at
+  a time.
+- **RWO PVC + single-replica Deployment**: default `strategy: Recreate`,
+  not RollingUpdate. RollingUpdate deadlocks because the new pod can't
+  attach the volume while the old one still holds it.
+
+### Homelab repo map
+
+- `${project_org}/k8s` — ArgoCD-managed kustomize manifests
+- `${project_org}/tf-modules` — Terraform modules, SemVer-tagged
+- `${project_org}/tf-live` — Terragrunt live + Atlantis plan/apply
+- `${project_org}/images` — Packer image builds
+- `${project_org}/charts` — Helm charts (OCI to Harbor + Forgejo Packages)
+- `${project_org}/infra` — Non-IaC config (Talos, network, Proxmox, servers)
+- `${project_org}/docs` — Docusaurus aggregator (cross-cutting docs)
+- `${project_org}/homelab-tools` — Go CLIs (forgejo primary, GitHub mirror planned)
+
+---
+
+<!-- repo-specific content appended below by the per-blueprint CLAUDE.md.tmpl -->

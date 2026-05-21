@@ -1,0 +1,32 @@
+// TODO: Docusaurus site config for ${project_name}.
+// Pin Docusaurus version + flesh out remote-content sources before use.
+// See https://docusaurus.io/docs/api/docusaurus-config
+
+module.exports = {
+  title: '${project_name}',
+  tagline: '${project_description}',
+  url: 'https://docs.fartlab.dev',
+  baseUrl: '/',
+  organizationName: '${project_org}',
+  projectName: '${project_name}',
+
+  // TODO: add remote-content plugin entries for each homelab repo:
+  //   - homelab/k8s
+  //   - homelab/tf-modules
+  //   - homelab/tf-live
+  //   - homelab/images
+  //   - homelab/charts
+  //   - homelab/infra
+  //   - github/homelab-tools
+  plugins: [],
+
+  presets: [
+    [
+      'classic',
+      {
+        docs: { sidebarPath: require.resolve('./sidebars.js') },
+        // TODO: theme, blog (if any), etc.
+      },
+    ],
+  ],
+};

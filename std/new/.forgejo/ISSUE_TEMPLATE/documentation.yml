@@ -1,0 +1,74 @@
+name: Documentation
+description: Documentation updates or improvements
+title: "[Docs] "
+labels: ["type:docs", "status:planned", "area:docs"]
+body:
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      options:
+        - P0 (Blocker)
+        - P1 (High)
+        - P2 (Medium)
+        - P3 (Low)
+    validations:
+      required: true
+
+  - type: dropdown
+    id: doc_area
+    attributes:
+      label: Documentation Area
+      options:
+        - API Reference
+        - Architecture
+        - Configuration
+        - Database
+        - Operations
+        - Plugins
+        - Testing
+        - README
+        - ADR
+    validations:
+      required: true
+
+  - type: dropdown
+    id: size
+    attributes:
+      label: Estimated Size
+      options:
+        - XS (< 2 hours)
+        - S (2-4 hours)
+        - M (4-8 hours)
+        - L (1-2 days)
+        - XL (2+ days)
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: What documentation needs to be added/updated?
+    validations:
+      required: true
+
+  - type: textarea
+    id: affected
+    attributes:
+      label: Affected Documents
+      description: Which documentation files will be modified?
+      placeholder: |
+        - docs/api/API_REFERENCE.md
+        - README.md
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance Criteria
+      placeholder: |
+        - [ ] Documentation updated
+        - [ ] Examples added
+        - [ ] Links verified

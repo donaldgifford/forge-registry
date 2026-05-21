@@ -1,0 +1,30 @@
+# ${project_name}
+
+${project_description}
+
+Packer templates for VM images and shared container images used across
+the homelab.
+
+## Layout
+
+```
+packer/<image>/
+  *.pkr.hcl               # Packer config
+  scripts/                # provisioning scripts
+  http/                   # PXE / cloud-init data (where applicable)
+```
+
+## Workflow
+
+```
+just packer <target>      # build via justfile wrapper
+```
+
+Per-app container images live with their source repos. This repo is
+for **shared** image builds (Packer VM templates, base images).
+
+## TODO
+
+- Add `just packer` recipe to the justfile (delegate to `_packer-build`
+  with positional arg).
+- Pin `packer` version in `mise.toml`.

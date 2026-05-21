@@ -1,0 +1,80 @@
+# CLAUDE.md
+
+Per-repo orientation for `${project_org}/${project_name}` — Docusaurus
+aggregator site that pulls `docs/` from every homelab repo at build time.
+
+## Homelab universals
+
+- **Toolchain pinned via `mise.toml`**; task runner `just`.
+- **`.env` is a [1Password Developer Environment](https://developer.1password.com/docs/environments/local-env-file)** file. `op run --env-file=.env -- <cmd>`. Never `source .env`.
+- **`docz create <type> "Title"`** for new docs that live HERE.
+- **`grep` is `rg`** — drop `-E`.
+
+## Repo layout
+
+```
+docusaurus.config.js   # site config + remote-content plugin sources
+sidebars.js            # left-nav structure
+docs/                  # native pages (cross-cutting topics that don't fit elsewhere)
+  runbooks/
+  architecture/
+  ...
+src/                   # custom Docusaurus components / pages (if any)
+static/                # static assets
+package.json
+```
+
+## Conventions
+
+- **Remote-content plugin = aggregation, NOT mirror**. Each repo's
+  `docs/` is fetched at build time from its source location. No
+  committed mirror, no sync workflow, no per-repo PR-to-sync. Source of
+  truth stays in each originating repo.
+- **Native pages** in `docs/` are for content that genuinely belongs at
+  the homelab level: runbooks that span repos, network topology
+  overviews, multi-repo architecture diagrams. Per-repo content lives
+  in the per-repo `docs/`.
+- **Build deploys to `https://docs.fartlab.dev`** (or chosen domain) via
+  `.forgejo/workflows/build-deploy.yml`. Static output published to
+  Garage S3 / a CDN / GitHub Pages — TBD.
+
+## Sources (TODO: wire up)
+
+The remote-content plugin needs auth for private Forgejo repos. Options:
+
+1. **Forgejo PAT** with `read:repository` scope on the homelab org.
+   Stored in 1P, exposed via `op run` at build time. Simplest.
+2. **Forgejo Actions OIDC** federated to a service-account token —
+   more secure but more setup.
+
+Source list (initial):
+
+- `git.fartlab.dev/homelab/k8s/docs/` → `/k8s/`
+- `git.fartlab.dev/homelab/tf-modules/docs/` → `/tf-modules/`
+- `git.fartlab.dev/homelab/tf-live/docs/` → `/tf-live/`
+- `git.fartlab.dev/homelab/images/docs/` → `/images/`
+- `git.fartlab.dev/homelab/charts/docs/` → `/charts/`
+- `git.fartlab.dev/homelab/infra/docs/` → `/infra/`
+- `git.fartlab.dev/homelab/homelab-tools/docs/` → `/homelab-tools/`
+
+## Known issues
+
+- *(none yet — Docusaurus isn't pinned/wired yet; file them in IMPL
+  Follow-Ups as setup reveals them)*
+
+## Open decisions
+
+- **Docusaurus vs alternatives** — VitePress, Astro Starlight, or
+  pure mkdocs-material are still on the table. Pin a choice once the
+  remote-content plugin is exercised against the real repos.
+- **Hosting target** — Garage S3 + CDN, Forgejo Pages (if available),
+  or external (Vercel/Netlify).
+- **Backstage TechDocs vs this site** — per-repo TechDocs (rendered by
+  Backstage from each repo's `mkdocs.yml`) covers individual-repo docs.
+  This site is for SYNTHESIZED / aggregated views. Keep both.
+
+## See also
+
+- All other `${project_org}/*` repos — sources for the aggregation.
+- Backstage at `backstage.fartlab.dev` — per-repo TechDocs view; this
+  site is complementary, not a replacement.

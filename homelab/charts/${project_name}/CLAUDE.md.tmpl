@@ -1,0 +1,79 @@
+# CLAUDE.md
+
+Per-repo orientation for `${project_org}/${project_name}` — Helm charts
+published as OCI artifacts to Harbor and Forgejo Packages.
+
+## Homelab universals
+
+- **Toolchain pinned via `mise.toml`**; task runner `just`.
+- **`.env` is a [1Password Developer Environment](https://developer.1password.com/docs/environments/local-env-file)** file. `op run --env-file=.env -- <cmd>`. Never `source .env`.
+- **`docz create <type> "Title"`** for new docs.
+- **`grep` is `rg`** — drop `-E`.
+
+## Repo layout
+
+```
+charts/<chart-name>/
+  Chart.yaml
+  values.yaml
+  templates/
+  README.md            # generated via helm-docs
+  README.md.gotmpl     # helm-docs template
+  ci/                  # ct lint test values (optional)
+```
+
+## Conventions
+
+- **One chart per directory** under `charts/`.
+- **Chart.yaml `appVersion` + `version` are independent**. Bump
+  `appVersion` when the upstream image bumps; bump `version` when the
+  chart shape (templates / defaults / required values) changes.
+- **Image pinning + Renovate**: pin the image tag in `values.yaml` with
+  `# renovate: image=<repo>` one line above. Renovate's `appVersion`
+  manager also fires off `Chart.yaml` — see homelab universal renovate
+  config.
+- **`helm-docs` regenerated on every PR**. Stale READMEs block
+  merge (CI fails the diff check).
+- **`ct lint` + `helm template` in CI**. `helm-unittest` for templates
+  with non-trivial logic.
+- **Versioning is per-chart, not per-repo**. A PR can bump multiple
+  charts; CI runs `ct lint --changed` to scope tests.
+
+## Publish workflow
+
+Charts publish on push to `main` via `.forgejo/workflows/chart-publish.yml`:
+
+1. `ct lint --changed` — fail fast on changed charts.
+2. `helm package` for each changed chart.
+3. `helm push` to OCI registries:
+   - **Primary**: `oci://harbor.fartlab.dev/charts/<name>` (Harbor in
+     the homelab cluster).
+   - **Secondary**: Forgejo Packages
+     (`oci://${git_host}/${project_org}/charts/<name>`).
+4. GHCR push only for charts explicitly flagged public-safe (separate
+   workflow).
+
+Consumers reference via:
+
+```yaml
+helmCharts:
+  - name: <chart>
+    repo: oci://harbor.fartlab.dev/charts
+    version: 0.0.0
+    releaseName: <name>
+    namespace: <ns>
+```
+
+## Known issues
+
+- **Kustomize `--enable-helm` writes a `charts/` cache next to
+  `kustomization.yaml`** in consumer repos. `${project_org}/k8s`'s
+  `.gitignore` covers this; no action needed in this repo.
+
+## See also
+
+- `${project_org}/k8s` — consumes these charts via `helmCharts` blocks
+  in kustomize. Add an example values overlay there when publishing a
+  new chart.
+- Harbor: `harbor.fartlab.dev` — OCI registry, also hosts Renovate
+  appVersion lookups.

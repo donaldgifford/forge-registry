@@ -1,0 +1,59 @@
+# CLAUDE.md
+
+Per-repo orientation for `${project_org}/${project_name}` — Packer image
+builds for homelab VMs and shared container images.
+
+## Homelab universals
+
+- **Toolchain pinned via `mise.toml`**; task runner `just`.
+- **`.env` is a [1Password Developer Environment](https://developer.1password.com/docs/environments/local-env-file)** file. `op run --env-file=.env -- <cmd>`. Never `source .env`.
+- **`docz create <type> "Title"`** for new docs.
+- **`grep` is `rg`** — drop `-E`.
+
+## Repo layout
+
+```
+packer/<image>/
+  <name>.pkr.hcl       # template
+  variables.pkr.hcl    # input vars
+  scripts/             # provisioner scripts
+  files/               # files to copy into the image
+.env.example
+justfile               # `just packer <image>` build wrappers
+```
+
+## Conventions
+
+- **One image dir per build target**. Names match the deployment slot
+  (`talos`, `debian-trixie`, etc.).
+- **Pin Packer version + plugin versions in `versions.pkr.hcl`** and in
+  `mise.toml`. Bump together — Renovate watches both.
+- **Build via `just packer <name>`** which wraps `packer init && packer
+  build` with `op run` for any provider credentials.
+- **No shared base images yet** — each build is standalone. Refactor to
+  a shared base via Packer's `null` builder + scripts/ inheritance only
+  if duplication becomes painful.
+- **Container images live with their source repos** (per-app Dockerfiles
+  in the app's own repo). This repo's container-image scope is for
+  GENERIC, shared images only — e.g. a homelab base-debian with mise
+  pre-installed.
+
+## Workflow
+
+- Edit template / scripts.
+- `just packer <name>` — runs `packer init`, validates, builds.
+- For Proxmox VM template builds, the output uploads to the Proxmox
+  template store (creds resolved by `op run`).
+- For container builds, push to Harbor (`harbor.fartlab.dev/images/...`)
+  via the `.forgejo/workflows/build.yml` on tag push.
+
+## Known issues
+
+- *(none recorded yet — file them in IMPL Follow-Ups as they surface)*
+
+## See also
+
+- `${project_org}/tf-live` — Proxmox VM templates built here are consumed
+  by Talos VM creation under `infra-live/`.
+- `${project_org}/k8s` — generic container images built here are
+  referenced by kustomize manifests there.

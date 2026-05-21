@@ -1,0 +1,28 @@
+# ${project_name}
+
+${project_description}
+
+Helm charts published as OCI artifacts.
+
+## Layout
+
+```
+charts/<name>/
+  Chart.yaml
+  values.yaml
+  templates/
+```
+
+## Publish destinations
+
+- **Primary**: `oci://harbor.fartlab.dev/charts/<name>` (Harbor)
+- **Secondary**: Forgejo Packages (OCI registry on `${git_host}`)
+
+Publish triggers on push to `main` when `charts/<name>/Chart.yaml`
+version bumps.
+
+## TODO
+
+- Add `.forgejo/workflows/chart-publish.yml` — Helm package + push to
+  both registries on Chart.yaml version change.
+- Wire 1Password references for Harbor robot account + Forgejo PAT.

@@ -1,0 +1,22 @@
+# ${project_name} — run `just` for the menu.
+
+default:
+    @just --list
+
+# Lint markdown + yaml
+lint:
+    yamllint .
+    markdownlint-cli2 '**/*.md'
+    prettier --check '**/*.md'
+
+# Auto-fix lint issues
+fmt:
+    yamlfmt .
+    prettier --write '**/*.md'
+
+# Sync labels to ${git_host} via gitea-label-sync
+labels-sync:
+    # TODO: wire up — see https://${git_host}/homelab/homelab-tools for tool path
+    @echo "TODO: gitea-label-sync --config labels.yaml"
+
+# TODO: add repo-type-specific recipes (deploy / build / publish / etc.)

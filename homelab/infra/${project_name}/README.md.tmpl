@@ -1,0 +1,19 @@
+# ${project_name}
+
+${project_description}
+
+Non-IaC, non-k8s configuration for homelab infrastructure: Talos node
+configs, network topology docs, Proxmox layouts, on-prem server notes.
+
+## Layout
+
+```
+talos/         # Talos node configs (consumed by homelab/tf-live regen)
+network/       # network topology, switch configs
+proxmox/       # Proxmox VM layouts, storage notes
+servers/       # bare-metal server inventory + provisioning notes
+```
+
+This is a catch-all for things that don't fit `homelab/k8s`,
+`homelab/tf-modules`, or `homelab/tf-live` but still belong in version
+control.
