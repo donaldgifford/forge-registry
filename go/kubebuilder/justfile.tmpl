@@ -77,7 +77,7 @@ test:
 # Run tests for a single package: just test-pkg ./internal/controller
 [group('test')]
 test-pkg pkg:
-    go test -v -race {{ "{{" }} pkg {{ "}}" }}
+    go test -v -race {{ pkg }}
 
 # Run tests with coverage profile written to coverage.out
 [group('test')]
@@ -127,7 +127,7 @@ lint-config:
 # Check dependency licenses against the allow list
 [group('license')]
 license-check:
-    go-licenses check ./... --allowed_licenses={{ "{{" }} allowed_licenses {{ "}}" }}
+    go-licenses check ./... --allowed_licenses={{ allowed_licenses }}
 
 # Generate CSV report of all dependency licenses
 [group('license')]
@@ -171,8 +171,8 @@ release-local:
 # Tag and push a new release: just release v0.1.0
 [group('release')]
 release tag:
-    git tag -a {{ "{{" }} tag {{ "}}" }} -m "Release {{ "{{" }} tag {{ "}}" }}"
-    git push origin {{ "{{" }} tag {{ "}}" }}
+    git tag -a {{ tag }} -m "Release {{ tag }}"
+    git push origin {{ tag }}
 
 # ─── Composite gates ────────────────────────────────────────────────
 
