@@ -1,7 +1,7 @@
-name        = "homelab-tf-live"
-description = "Terragrunt live config + boilerplate templates, plan/apply via Atlantis"
+name        = "homelab-go"
+description = "Go project blueprint with homelab conventions (forgejo default, github for mirror)"
 version     = "0.1.0"
-tags        = ["homelab", "terraform", "terragrunt", "atlantis", "forgejo"]
+tags        = ["homelab", "go", "forgejo"]
 
 variable "project_name" {
   description = "Name of the project (lowercase, kebab-case)"
@@ -23,6 +23,13 @@ variable "license" {
   default     = "Apache-2.0"
 }
 
+variable "go_version" {
+  description = "Go toolchain version (matches go.mod, mise.toml, Dockerfile)"
+  type        = "string"
+  default     = "1.24"
+}
+
+# Single source of truth — drives project_org / git_host / renovate_config_prefix.
 variable "git_provider" {
   description = "Git provider this repo lives on"
   type        = "choice"
@@ -59,6 +66,5 @@ condition {
 }
 
 hooks {
-  post_create = ["git init"]
+  post_create = ["git init", "go mod tidy"]
 }
-

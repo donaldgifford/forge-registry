@@ -19,7 +19,7 @@ prettier = "3.7.4"
 "github:donaldgifford/makefmt" = "latest"
 checkmake = "latest"
 git-cliff = "latest"
-"github:donaldgifford/forge" = "0.4.1"
+"github:donaldgifford/forge" = "0.7.0"
 
 # tools
 yq = "4.48.1"
