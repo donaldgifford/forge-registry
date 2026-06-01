@@ -30,9 +30,3 @@ variable "license" {
   default     = "Apache-2.0"
 }
 
-rename {
-  entry {
-    from = "{{project_name}}/"
-    to   = "."
-  }
-}

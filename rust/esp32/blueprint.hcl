@@ -27,9 +27,3 @@ hooks {
   post_create = ["git init"]
 }
 
-rename {
-  entry {
-    from = "{{project_name}}/"
-    to   = "."
-  }
-}
