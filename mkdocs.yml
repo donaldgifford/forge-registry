@@ -5,6 +5,7 @@ nav:
     - Design:
         - Overview: design/README.md
         - 'DESIGN-0001: Claude Code Skills for Forge Registry Management': design/0001-claude-code-skills-for-forge-registry-management.md
+        - 'DESIGN-0002: Align go/std Blueprint with hclkit Conventions': design/0002-align-gostd-blueprint-with-hclkit-conventions.md
     - Implementation Plans:
         - Overview: impl/README.md
         - 'IMPL-0001: Forge Registry Skills Plugin': impl/0001-forge-registry-skills-plugin.md

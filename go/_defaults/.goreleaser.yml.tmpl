@@ -1,25 +1,45 @@
 ---
+# $schema=https://goreleaser.com/static/schema.json
+# goreleaser config for ${project_name}
+# Triggered by .forgejo/workflows/release.yml or .github/workflows/release.yml on tag push.
 version: 2
+
+project_name: ${project_name}
 
 builds:
   - id: ${project_name}
-    binary: ${project_name}
     main: ./cmd/${project_name}
+    binary: ${project_name}
+    env:
+      - CGO_ENABLED=0
+    flags:
+      - -trimpath
+    ldflags:
+      - -s -w
+      - -X main.version={{ .Version }}
+      - -X main.commit={{ .Commit }}
+      - -X main.date={{ .Date }}
     goos:
       - linux
       - darwin
     goarch:
       - amd64
       - arm64
-    env:
-      - CGO_ENABLED=0
 
 archives:
   - id: default
-    name_template: '{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}'
-    format: "tar.gz"
+    name_template: '{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}'
+    formats: ["tar.gz"]
     files:
       - none*
+
+sboms:
+  - id: archives
+    artifacts: archive
+    documents:
+      - "$${artifact}.spdx.json"
+    cmd: syft
+    args: ["$artifact", "--output", "spdx-json=$document"]
 
 checksum:
   name_template: 'checksums.txt'

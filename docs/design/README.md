@@ -33,4 +33,5 @@ docz create design "Your Design Title"
 | ID | Title | Status | Date | Author | Link |
 |----|-------|--------|------|--------|------|
 | DESIGN-0001 | Claude Code Skills for Forge Registry Management | Draft | 2026-04-10 | Donald Gifford | [0001-claude-code-skills-for-forge-registry-management.md](0001-claude-code-skills-for-forge-registry-management.md) |
+| DESIGN-0002 | Align go/std Blueprint with hclkit Conventions | Draft | 2026-06-03 | Donald Gifford | [0002-align-gostd-blueprint-with-hclkit-conventions.md](0002-align-gostd-blueprint-with-hclkit-conventions.md) |
 <!-- END DOCZ AUTO-GENERATED -->

@@ -1,5 +1,5 @@
 ---
-# $schema=https://schemastore.org/https://www.schemastore.org/github-action.json
+# $schema=https://www.schemastore.org/github-action.json
 name: Release
 
 on:
@@ -9,6 +9,7 @@ on:
 
 permissions:
   contents: write
+  packages: write
   issues: read
   pull-requests: read
 
@@ -53,6 +54,9 @@ jobs:
         uses: actions/setup-go@v6
         with:
           go-version-file: go.mod
+
+      - name: Install syft
+        uses: anchore/sbom-action/download-syft@v0
 
       - name: Import GPG key
         id: import_gpg
