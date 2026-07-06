@@ -44,26 +44,26 @@ variable "project_description" {
   required    = true
 }
 
-variable "project_system" {
-  description = "Backstage Component system"
+variable "project_component_type" {
+  description = "Backstage Entity Component Type"
   type        = "string"
   required    = true
 }
 
-variable "project_lifecycle" {
-  description = "Backstage Component lifecycle"
+variable "project_component_system" {
+  description = "Backstage Entity Component reference System"
   type        = "string"
   required    = true
 }
 
-variable "project_owner" {
-  description = "Backstage Component Owner"
+variable "project_component_lifecycle" {
+  description = "Backstage Entity Component lifecycle"
   type        = "string"
   required    = true
 }
 
-variable "project_service" {
-  description = "Backstage Component Service"
+variable "project_component_owner" {
+  description = "Backstage Entity Component Owner"
   type        = "string"
   required    = true
 }

@@ -28,10 +28,11 @@ docz create design "Your Design Title"
 - **Abandoned**: Design was not pursued
 
 <!-- BEGIN DOCZ AUTO-GENERATED -->
-## All DESIGNs
+## All Design
 
 | ID | Title | Status | Date | Author | Link |
 |----|-------|--------|------|--------|------|
 | DESIGN-0001 | Claude Code Skills for Forge Registry Management | Draft | 2026-04-10 | Donald Gifford | [0001-claude-code-skills-for-forge-registry-management.md](0001-claude-code-skills-for-forge-registry-management.md) |
 | DESIGN-0002 | Align go/std Blueprint with hclkit Conventions | Draft | 2026-06-03 | Donald Gifford | [0002-align-gostd-blueprint-with-hclkit-conventions.md](0002-align-gostd-blueprint-with-hclkit-conventions.md) |
+| DESIGN-0003 | Bun Registry: bun/std Blueprint Shape | Draft | 2026-06-30 | Donald Gifford | [0003-bun-registry-bunstd-blueprint-shape.md](0003-bun-registry-bunstd-blueprint-shape.md) |
 <!-- END DOCZ AUTO-GENERATED -->

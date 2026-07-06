@@ -117,3 +117,24 @@ blueprint "go/docker" {
   version     = "0.1.0"
   tags        = ["go", "docker"]
 }
+
+blueprint "bun/std" {
+  path        = "bun/std"
+  description = "bunjs typescript blueprint"
+  version     = "0.1.0"
+  tags        = ["bun", "typescript"]
+}
+
+blueprint "go/cli" {
+  path        = "go/cli"
+  description = "go cli blueprint"
+  version     = "0.1.0"
+  tags        = ["go", "cli"]
+}
+
+blueprint "std/docs" {
+  path        = "std/docs"
+  description = "docs repo blueprint"
+  version     = "0.1.0"
+  tags        = ["std", "docs"]
+}

@@ -1,0 +1,90 @@
+name: Core Feature
+description: New feature for ShitWiz Core (API, database, auth, scheduler, worker, etc.)
+title: "[Feature] "
+labels: ["type:feature", "status:planned"]
+body:
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      description: How urgent is this feature?
+      options:
+        - P0 (Blocker)
+        - P1 (High)
+        - P2 (Medium)
+        - P3 (Low)
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      description: Which area does this feature affect?
+      options:
+        - API
+        - Database
+        - Auth
+        - Scheduler
+        - Worker
+        - Queue
+        - Config
+        - Logging
+        - Docs
+        - Testing
+        - CI/CD
+        - Deployment
+    validations:
+      required: true
+
+  - type: dropdown
+    id: size
+    attributes:
+      label: Estimated Size
+      description: How large is this feature?
+      options:
+        - XS (< 2 hours)
+        - S (2-4 hours)
+        - M (4-8 hours)
+        - L (1-2 days)
+        - XL (2+ days)
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: What feature should be added and why?
+      placeholder: Describe the feature in detail
+    validations:
+      required: true
+
+  - type: textarea
+    id: requirements
+    attributes:
+      label: Requirements
+      description: What are the specific requirements?
+      placeholder: |
+        - Requirement 1
+        - Requirement 2
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance Criteria
+      description: How will we know this is complete?
+      placeholder: |
+        - [ ] Criterion 1
+        - [ ] Criterion 2
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional Context
+      description: Any other context, mockups, or references?
+      placeholder: Links, screenshots, related issues, etc.
