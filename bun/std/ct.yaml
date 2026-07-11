@@ -1,5 +1,6 @@
 ---
-# $schema=https://json.schemastore.org/helm-testsuite.json
+# chart-testing (ct) does not publish a JSON schema — no yaml-language-server
+# modeline. See https://github.com/helm/chart-testing/issues for status.
 chart-dirs:
   - charts
 target-branch: main
