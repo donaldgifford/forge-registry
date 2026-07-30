@@ -1,0 +1,30 @@
+# CLAUDE.md
+
+Per-repo orientation for `${project_org}/${project_name}`.
+
+## What this is
+
+`${project_name}` ${project_description}:
+
+- Lives on ${git_host} (`${git_host}/${project_org}/${project_name}`);
+
+## Layout
+
+```
+mise.toml               # pinned go + golangci-lint + goreleaser + universal tools
+justfile                # `just` task runner — `just` for the menu
+.forgejo/workflows/     # CI (Forgejo Actions) — primary
+.github/workflows/      # CI (GitHub Actions) — mirror
+```
+
+## Workflows
+
+### Lint + format
+
+- `just lint` —  + yamllint + markdownlint + prettier
+- `just fmt` —  + yamlfmt + prettier `--write`.
+
+## Renovate
+
+- `mise.toml` versions are handled by a custom regex manager configured
+  upstream in `${project_org}/renovate-config`.

@@ -1,0 +1,79 @@
+name: Bug Report
+description: Report a bug or issue
+title: "[Bug] "
+labels: ["type:bug", "status:planned"]
+body:
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      options:
+        - P0 (Blocker)
+        - P1 (High)
+        - P2 (Medium)
+        - P3 (Low)
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - API
+        - Database
+        - Auth
+        - Scheduler
+        - Worker
+        - Queue
+        - Config
+        - Logging
+        - Docs
+        - Testing
+        - CI/CD
+        - Deployment
+        - Plugin
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: What is the bug?
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to Reproduce
+      description: How can we reproduce this bug?
+      placeholder: |
+        1. Step 1
+        2. Step 2
+        3. ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: What should happen?
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual Behavior
+      description: What actually happens?
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional Context
+      description: Logs, screenshots, environment details, etc.

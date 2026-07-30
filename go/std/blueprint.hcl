@@ -22,3 +22,9 @@ variable "project_description" {
   type        = "string"
   required    = true
 }
+
+variable "backstage_tags" {
+  description = "Backstage Component spec config"
+  type        = "map"
+  required    = true
+}

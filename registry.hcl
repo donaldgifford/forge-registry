@@ -32,7 +32,6 @@ blueprint "rust/esp32" {
   latest_commit = "518c7642d7e1f5e5ce74023f0c6a9b65bcd14871"
 }
 
-
 blueprint "go-kubebuilder" {
   path          = "go/kubebuilder"
   description   = "Go Kubernetes operator blueprint (kubebuilder)"
@@ -110,4 +109,32 @@ blueprint "homelab/go" {
   description = "Go project blueprint with homelab conventions (forgejo default, github mirror)"
   version     = "0.1.0"
   tags        = ["homelab", "go", "forgejo"]
+}
+
+blueprint "go/docker" {
+  path        = "go/docker"
+  description = "go docker blueprint"
+  version     = "0.1.0"
+  tags        = ["go", "docker"]
+}
+
+blueprint "bun/std" {
+  path        = "bun/std"
+  description = "bunjs typescript blueprint"
+  version     = "0.1.0"
+  tags        = ["bun", "typescript"]
+}
+
+blueprint "go/cli" {
+  path        = "go/cli"
+  description = "go cli blueprint"
+  version     = "0.1.0"
+  tags        = ["go", "cli"]
+}
+
+blueprint "std/docs" {
+  path        = "std/docs"
+  description = "docs repo blueprint"
+  version     = "0.1.0"
+  tags        = ["std", "docs"]
 }
