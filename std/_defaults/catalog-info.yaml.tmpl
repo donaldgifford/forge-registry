@@ -1,4 +1,5 @@
 ---
+# yaml-language-server: $schema=https://www.schemastore.org/catalog-info.json
 apiVersion: backstage.io/v1alpha1
 kind: Component
 metadata:
@@ -6,16 +7,13 @@ metadata:
   title: ${project_name}
   description: ${project_description}
   annotations:
-    backstage.io/code-coverage: enabled
     backstage.io/source-location: url:https://${git_host}/${project_org}/${project_name}
     backstage.io/techdocs-ref: "dir:."
-    github.com/project-slug: ${project_org}/${project_name}
   tags:
     - go
-    - github
   namespace: default
 spec:
-  lifecycle: production
-  type: service
-  owner: donaldgifford
-  system: infrastructure
+  lifecycle: ${project_component_lifecycle}
+  type: ${project_component_type}
+  owner: ${project_component_owner}
+  system: ${project_component_system}
