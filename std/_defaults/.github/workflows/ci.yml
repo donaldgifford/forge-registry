@@ -21,6 +21,16 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/labeler@v6
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
 
   security:
     name: Security Scan

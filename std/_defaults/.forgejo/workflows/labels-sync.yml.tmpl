@@ -1,0 +1,16 @@
+---
+name: labels-sync
+on:
+  push:
+    branches: [main]
+    paths: [labels.yaml]
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: jdx/mise-action@v2
+      # TODO: invoke gitea-label-sync against ${git_host} for ${project_org}/${project_name}
+      - run: echo "TODO: gitea-label-sync --config labels.yaml"

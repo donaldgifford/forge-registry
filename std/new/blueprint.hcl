@@ -4,16 +4,10 @@ version     = "0.1.0"
 tags        = ["std", "new"]
 
 variable "project_name" {
-  description = "Name of the project (lowercase, kebab-case)"
+  description = "Name of the project"
   type        = "string"
   required    = true
   validate    = "^[a-z][a-z0-9-]*$"
-}
-
-variable "project_description" {
-  description = "One-line description of the project (used in catalog-info, READMEs)"
-  type        = "string"
-  default     = "TODO: Add a description"
 }
 
 variable "license" {
@@ -23,35 +17,75 @@ variable "license" {
   default     = "Apache-2.0"
 }
 
-# Single source of truth. project_org / git_host / renovate_config_prefix
-# derive from this via lazy-evaluated conditional defaults — set git_provider
-# once and the rest fall out.
+variable "go_version" {
+  description = "Go toolchain version (matches go.mod, mise.toml, Dockerfile)"
+  type        = "string"
+  default     = "1.26.4"
+}
+
+# Single source of truth — drives project_org / git_host / renovate_config_prefix.
 variable "git_provider" {
   description = "Git provider this repo lives on"
   type        = "choice"
-  choices     = ["github", "forgejo"]
-  default     = "github"
+  choices     = ["forgejo", "github"]
+  default     = "forgejo"
+}
+
+variable "project_owner" {
+  description = "Owner of the project"
+  type        = "string"
+  required    = true
+  validate    = "^[a-z][a-z0-9-]*$"
+}
+
+variable "project_description" {
+  description = "Description of the project"
+  type        = "string"
+  required    = true
+}
+
+variable "project_component_type" {
+  description = "Backstage Entity Component Type"
+  type        = "string"
+  required    = true
+}
+
+variable "project_component_system" {
+  description = "Backstage Entity Component reference System"
+  type        = "string"
+  required    = true
+}
+
+variable "project_component_lifecycle" {
+  description = "Backstage Entity Component lifecycle"
+  type        = "string"
+  required    = true
+}
+
+variable "project_component_owner" {
+  description = "Backstage Entity Component Owner"
+  type        = "string"
+  required    = true
 }
 
 variable "project_org" {
-  description = "Org/user owning the repo (defaults derived from git_provider; override at prompt if needed)"
+  description = "Org/user owning the repo"
   type        = "string"
-  default     = "${git_provider == "github" ? "donaldgifford" : "homelab"}"
+  default     = "${git_provider == "forgejo" ? "homelab" : "donaldgifford"}"
 }
 
 variable "git_host" {
-  description = "Hostname of the git provider (derived from git_provider)"
+  description = "Hostname of the git provider"
   type        = "string"
-  default     = "${git_provider == "github" ? "github.com" : "git.fartlab.dev"}"
+  default     = "${git_provider == "forgejo" ? "git.fartlab.dev" : "github.com"}"
 }
 
 variable "renovate_config_prefix" {
-  description = "Renovate `extends:` source prefix (derived from git_provider)"
+  description = "Renovate `extends:` source prefix"
   type        = "string"
-  default     = "${git_provider == "github" ? "github" : "git.fartlab.dev"}"
+  default     = "${git_provider == "forgejo" ? "git.fartlab.dev" : "github"}"
 }
 
-# Drop the provider-irrelevant directory from the scaffold output.
 condition {
   when    = git_provider != "github"
   exclude = [".github/"]
@@ -62,6 +96,8 @@ condition {
   exclude = [".forgejo/"]
 }
 
-hooks {
-  post_create = ["git init"]
-}
+# variable "backstage_tags" {
+#   description = "Backstage Component spec config"
+#   type        = "map"
+#   required    = true
+# }
