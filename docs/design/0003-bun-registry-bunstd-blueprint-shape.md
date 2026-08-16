@@ -32,6 +32,16 @@ created: 2026-06-30
 - [Testing Strategy](#testing-strategy)
 - [Migration / Rollout Plan](#migration--rollout-plan)
 - [Open Questions](#open-questions)
+  - [1. Cover the backstage-api shape (Bun server + Biome + bun test) as a sibling blueprint?](#1-cover-the-backstage-api-shape-bun-server--biome--bun-test-as-a-sibling-blueprint)
+  - [2. .prettierrc.json vs .prettierrc.yaml for bun?](#2-prettierrcjson-vs-prettierrcyaml-for-bun)
+  - [3. Keep cliff.toml + standalone changelog workflows for bun/std?](#3-keep-clifftoml--standalone-changelog-workflows-for-bunstd)
+  - [4. package.json dependency set — minimum viable React/RR7 or richer?](#4-packagejson-dependency-set--minimum-viable-reactrr7-or-richer)
+  - [5. Dockerfile production stage — Caddy static or Bun SSR server?](#5-dockerfile-production-stage--caddy-static-or-bun-ssr-server)
+  - [6. CI workflow set — slim rfc-site shape or richer Go-fleet shape?](#6-ci-workflow-set--slim-rfc-site-shape-or-richer-go-fleet-shape)
+  - [7. react-router.config.ts lives in bun/std or bun/_defaults?](#7-react-routerconfigts-lives-in-bunstd-or-bundefaults)
+  - [8. git_provider default for bun/std — github or forgejo?](#8-gitprovider-default-for-bunstd--github-or-forgejo)
+  - [9. Should bun/std emit tests/setup.ts with content, or just .gitkeep?](#9-should-bunstd-emit-testssetupts-with-content-or-just-gitkeep)
+  - [10. docker.just filename + import path](#10-dockerjust-filename--import-path)
 - [References](#references)
 <!--toc:end-->
 
