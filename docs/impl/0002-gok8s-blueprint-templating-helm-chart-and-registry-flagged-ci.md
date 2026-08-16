@@ -664,8 +664,11 @@ index, and land the PR.
 - [x] `/registry-validate` clean; `/registry-review` pass over the final diff
 - [x] Repo linters green: `yamllint`, `yamlfmt`, `markdownlint-cli2`, `prettier`
       (this doc included)
-- [ ] Commit on `feat/go-k8s` and open the PR to `main` with the test matrix
-      evidence in the description
+- [x] Commit on `feat/go-k8s` and open the PR to `main` with the test matrix
+      evidence in the description — landed as
+      [forge-registry#15](https://github.com/donaldgifford/forge-registry/pull/15);
+      the hooks bug filed upstream as
+      [forge#41](https://github.com/donaldgifford/forge/issues/41)
 
 > **Phase 6 execution notes (2026-08-15):**
 >
