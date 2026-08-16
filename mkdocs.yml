@@ -18,6 +18,8 @@ nav:
         - Overview: plan/README.md
     - RFCs:
         - Overview: rfc/README.md
+    - Examples:
+        - Overview: examples/README.md
 plugins:
     - techdocs-core
 site_description: Documentation for forge-registry
