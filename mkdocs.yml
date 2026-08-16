@@ -7,9 +7,11 @@ nav:
         - 'DESIGN-0001: Claude Code Skills for Forge Registry Management': design/0001-claude-code-skills-for-forge-registry-management.md
         - 'DESIGN-0002: Align go/std Blueprint with hclkit Conventions': design/0002-align-gostd-blueprint-with-hclkit-conventions.md
         - 'DESIGN-0003: Bun Registry: bun/std Blueprint Shape': design/0003-bun-registry-bunstd-blueprint-shape.md
+        - 'DESIGN-0004: go/k8s Blueprint: Go Service with Helm Chart and Registry-Flagged CI': design/0004-gok8s-blueprint-go-service-with-helm-chart-and-registry-flagged.md
     - Implementation Plans:
         - Overview: impl/README.md
         - 'IMPL-0001: Forge Registry Skills Plugin': impl/0001-forge-registry-skills-plugin.md
+        - 'IMPL-0002: go/k8s Blueprint: Templating, Helm Chart, and Registry-Flagged CI': impl/0002-gok8s-blueprint-templating-helm-chart-and-registry-flagged-ci.md
     - Investigations:
         - Overview: investigation/README.md
     - Plans:

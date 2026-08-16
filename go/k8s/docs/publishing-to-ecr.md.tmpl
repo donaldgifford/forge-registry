@@ -1,0 +1,75 @@
+# Publishing to Amazon ECR
+
+This repo's release workflow (`.github/workflows/release.yml`) publishes
+the container image and the Helm chart to Amazon ECR as OCI artifacts.
+The workflow is fully wired — it just needs one-time AWS-side prep, then
+arming via a repo variable.
+
+Until it is armed, merges to `main` still bump the version and push the
+release tag; only the publish jobs stay skipped.
+
+## One-time AWS setup
+
+Create the two ECR repositories (image and chart):
+
+```bash
+aws ecr create-repository \
+  --repository-name ${project_name} \
+  --region us-east-1
+
+aws ecr create-repository \
+  --repository-name ${project_name}-chart \
+  --region us-east-1
+```
+
+Configure an IAM role that GitHub Actions can assume via OIDC. The
+trust policy should match this repository's OIDC subject (e.g.
+`repo:${project_owner}/${project_name}:*`). Permissions needed:
+`ecr:GetAuthorizationToken`, `ecr:BatchCheckLayerAvailability`,
+`ecr:CompleteLayerUpload`, `ecr:InitiateLayerUpload`, `ecr:PutImage`,
+`ecr:UploadLayerPart`, `ecr:DescribeRepositories`, and
+`ecr:DescribeImages` against both repository ARNs.
+
+## Repository configuration
+
+Add these Actions secrets (Settings → Secrets and variables → Actions):
+
+| Secret               | Value                                                    |
+| -------------------- | -------------------------------------------------------- |
+| `ECR_AWS_ACCOUNT_ID` | 12-digit AWS account id                                  |
+| `ECR_REGION`         | ECR region, e.g. `us-east-1`                             |
+| `ECR_ROLE_ARN`       | ARN of the OIDC role, e.g. `arn:aws:iam::<id>:role/<r>`  |
+
+Then arm the publish jobs by setting the repo **variable**
+`ECR_PUBLISH_ENABLED=true`. `workflow_dispatch` runs bypass this gate so
+the pipeline can be tested standalone before arming.
+
+## What the workflow publishes
+
+- **Image** — `<registry>/${project_name}:<semver>` (multi-arch via
+  docker buildx bake), signed with cosign, with SLSA provenance
+  attached.
+- **Chart** — `oci://<registry>/${project_name}-chart` at the version in
+  `charts/${project_name}/Chart.yaml`, signed with cosign, with SLSA
+  provenance. The push is idempotent: an already-published chart version
+  is skipped, so chart-only changes (PRs labeled `dont-release`) publish
+  without a new image release.
+
+where `<registry>` is
+`<account-id>.dkr.ecr.<region>.amazonaws.com`.
+
+Cosign signatures and SLSA attestations are stored in ECR alongside the
+artifacts they cover — verify with `cosign verify` against the pushed
+digest.
+
+## Local push (no CI)
+
+`just helm-push` packages the chart and pushes it to the registry named
+by the `ECR_REGISTRY` environment variable. Auth is handled separately:
+
+```bash
+export ECR_REGISTRY=<account-id>.dkr.ecr.<region>.amazonaws.com
+aws ecr get-login-password --region <region> | \
+  helm registry login "$ECR_REGISTRY" --username AWS --password-stdin
+just helm-push
+```

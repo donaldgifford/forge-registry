@@ -138,3 +138,10 @@ blueprint "std/docs" {
   version     = "0.1.0"
   tags        = ["std", "docs"]
 }
+
+blueprint "go/k8s" {
+  path        = "go/k8s"
+  description = "Go service with container image + Helm chart, registry-flagged CI (GHCR/ECR)"
+  version     = "0.1.0"
+  tags        = ["go", "k8s", "helm", "docker"]
+}

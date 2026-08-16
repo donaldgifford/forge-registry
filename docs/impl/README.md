@@ -28,9 +28,10 @@ docz create impl "Your Implementation Title"
 - **Cancelled**: Plan was abandoned
 
 <!-- BEGIN DOCZ AUTO-GENERATED -->
-## All IMPLs
+## All Implementation Plans
 
 | ID | Title | Status | Date | Author | Link |
 |----|-------|--------|------|--------|------|
 | IMPL-0001 | Forge Registry Skills Plugin | Draft | 2026-04-10 | Donald Gifford | [0001-forge-registry-skills-plugin.md](0001-forge-registry-skills-plugin.md) |
+| IMPL-0002 | go/k8s Blueprint: Templating, Helm Chart, and Registry-Flagged CI | Draft | 2026-08-15 | Donald Gifford | [0002-gok8s-blueprint-templating-helm-chart-and-registry-flagged-ci.md](0002-gok8s-blueprint-templating-helm-chart-and-registry-flagged-ci.md) |
 <!-- END DOCZ AUTO-GENERATED -->
