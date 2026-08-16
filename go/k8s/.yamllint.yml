@@ -51,3 +51,5 @@ ignore: |-
   vendor/
   .git/
   .github/
+  charts/
+  build/

@@ -16,12 +16,10 @@ just lint                         # lint
 
 Use [GitHub Issues](https://${git_host}/${project_org}/${project_name}/issues) for:
 
-- **Bug reports** — include the `docz version` output, the command you ran, and
-  the error you saw
+- **Bug reports** — include the version you are running, the command you ran,
+  and the error you saw
 - **Feature requests** — describe the problem you are trying to solve, not just
   the solution you have in mind
-- **Template improvements** — open an issue before changing embedded templates,
-  as changes affect all existing users
 - For larger proposals, open an RFC document via `docz create rfc` and
   link it from the issue.
 
@@ -29,12 +27,13 @@ Use [GitHub Issues](https://${git_host}/${project_org}/${project_name}/issues) f
 
 ### Prerequisites
 
-- [docz](https://github.com/donaldgifford/docz)
-- `just`
+- [mise](https://mise.jdx.dev) — installs the pinned toolchain (including
+  `just`) from `mise.toml`
 
 ```bash
 git clone https://${git_host}/${project_org}/${project_name}.git
 cd ${project_name}
+mise install
 just lint    # runs linters
 ```
 
@@ -56,7 +55,7 @@ Types: `feat`, `fix`, `docs`, `chore`, `refactor`
 
 - Keep changes focused. One logical change per PR.
 - Add or update tests for any code you change.
-- Run `make lint` and `make test` before pushing.
+- Run `just lint` and `just test` before pushing.
 
 ### 3. Commit
 

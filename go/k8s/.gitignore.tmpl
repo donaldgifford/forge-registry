@@ -3,10 +3,11 @@
 #
 # Go-specific (supplements registry-root .gitignore)
 
-# Build output
+# Root-level binary from a bare `go build` (the justfile targets write
+# to build/bin/, but `go build ./cmd/...` drops it here).
+/${project_name}
 /dist/
 /bin/
-/${project_name}
 build/
 
 # IDE
@@ -25,6 +26,9 @@ build/
 *.dylib
 
 # Code coverage profiles and other test artifacts
+
+# Test binary, built with `go test -c` and code coverage profiles and other test artifacts
+*.test
 *.out
 coverage.*
 *.coverprofile
@@ -40,6 +44,14 @@ go.work.sum
 
 # Goreleaser snapshot output (created by `just release-local`)
 dist/
+
+# mkdocs build output (`mkdocs build` / `mkdocs build --strict`).
+# The published site is built by CI from source, never from a
+# committed tree.
+site/
+
+# Helm chart packages (output of `helm package`)
+*.tgz
 
 # donald-loop runtime state
 .claude/donald-loop.local.md
