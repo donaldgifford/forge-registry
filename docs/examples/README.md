@@ -57,7 +57,10 @@ enable_monitoring = false          # bool — bare, not "false"
 ## Structured types (forge v0.8 / IMPL-0009)
 
 forge v0.8 blueprints can declare `object({...})`, `list(...)`, and `map(...)`
-variables; vars files supply them as plain HCL literals:
+variables — and vars files are the only full channel for supplying them: `--set`
+rejects `list`/`map` variables outright ("use --var-file to supply list and map
+values"), accepts objects only as a quoted HCL-literal string, and interactive
+prompting is scalar-only. Vars files take all three as plain HCL literals:
 
 ```hcl
 # Hypothetical — no registry blueprint declares these yet. Issue #14
