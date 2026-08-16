@@ -140,8 +140,9 @@ blueprint "std/docs" {
 }
 
 blueprint "go/k8s" {
-  path        = "go/k8s"
-  description = "Go service with container image + Helm chart, registry-flagged CI (GHCR/ECR)"
-  version     = "0.1.0"
-  tags        = ["go", "k8s", "helm", "docker"]
+  path          = "go/k8s"
+  description   = "Go service with container image + Helm chart, registry-flagged CI (GHCR/ECR)"
+  version       = "0.2.0"
+  tags          = ["go", "k8s", "helm", "docker"]
+  latest_commit = "fc833178701e2b7dbe43c685de80062209655da7"
 }
