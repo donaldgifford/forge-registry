@@ -49,11 +49,14 @@ the pipeline can be tested standalone before arming.
 - **Image** — `<registry>/${project_name}:<semver>` (multi-arch via
   docker buildx bake), signed with cosign, with SLSA provenance
   attached.
-- **Chart** — `oci://<registry>/${project_name}-chart` at the version in
-  `charts/${project_name}/Chart.yaml`, signed with cosign, with SLSA
-  provenance. The push is idempotent: an already-published chart version
-  is skipped, so chart-only changes (PRs labeled `dont-release`) publish
-  without a new image release.
+- **Chart** — `oci://<registry>/${project_name}-chart` at the
+  tag-derived version (chart version = tag without the leading `v`,
+  `appVersion` = tag) — lockstep with the image and binary;
+  `Chart.yaml` keeps a `0.0.0-dev` placeholder by design. The push is
+  idempotent: an already-published chart version is skipped.
+
+The GitHub Release itself (goreleaser binary archives) is
+registry-independent and publishes regardless of the ECR gate below.
 
 where `<registry>` is
 `<account-id>.dkr.ecr.<region>.amazonaws.com`.

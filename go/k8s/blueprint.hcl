@@ -1,6 +1,6 @@
 name        = "go-k8s"
 description = "Go service with container image + Helm chart, registry-flagged CI (GHCR/ECR)"
-version     = "0.1.0"
+version     = "0.2.0"
 tags        = ["go", "k8s", "helm", "docker"]
 
 # forge v0.8 variable syntax (IMPL-0009): bareword types + `validation`
@@ -166,14 +166,32 @@ condition {
   exclude = ["charts/$${project_name}/README.md.gotmpl*"]
 }
 
+condition {
+  when    = license == "none"
+  exclude = ["LICENSE*"]
+}
+
 # ─── Inherited files this blueprint replaces ─────────────────────────
-# go/_defaults ships a goreleaser release train; go/k8s releases an
-# image + chart instead (IMPL-0002 OQ-4). Exact relpaths — no globs.
+# go/_defaults ships a tag-push goreleaser release workflow; go/k8s
+# runs its own lockstep train instead (binary + image + chart all at
+# the PR-label bump tag), with k8s-specific .goreleaser.yml.tmpl and
+# justfile.tmpl overrides shipping by identical relpath. The
+# registry-root .forgejo/ tree is excluded because this blueprint is
+# GitHub-pinned (no git_provider prompt) — go/k8s ships
+# .github/ISSUE_TEMPLATE/ instead. Exact relpaths — no globs.
 
 defaults {
   exclude = [
     ".github/workflows/release.yml",
-    ".goreleaser.yml.tmpl",
+    ".forgejo/PULL_REQUEST_TEMPLATE.yml",
+    ".forgejo/workflows/lint.yml.tmpl",
+    ".forgejo/workflows/labels-sync.yml.tmpl",
+    ".forgejo/ISSUE_TEMPLATE/bug.yml",
+    ".forgejo/ISSUE_TEMPLATE/config.yml",
+    ".forgejo/ISSUE_TEMPLATE/documentation.yml",
+    ".forgejo/ISSUE_TEMPLATE/feature-core.yml",
+    ".forgejo/ISSUE_TEMPLATE/feature-plugin.yml",
+    ".forgejo/ISSUE_TEMPLATE/refactor.yml",
   ]
 }
 

@@ -1,0 +1,62 @@
+# If you prefer the allow list template instead of the deny list, see community template:
+# https://github.com/github/gitignore/blob/main/community/Golang/Go.AllowList.gitignore
+#
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.swp
+*.swo
+*~
+
+# Test binary, built with `go test -c`
+*.test
+
+# Code coverage profiles and other test artifacts
+*.out
+coverage.*
+*.coverprofile
+profile.cov
+
+# Dependency directories (remove the comment below to include it)
+# vendor/
+
+# Go workspace file
+go.work
+go.work.sum
+
+# env file
+.env
+
+# Editor/IDE
+.idea/
+.vscode/
+
+# Build directories
+build/
+dist/
+
+# Root-level binary from a bare `go build` (the Makefile targets write
+# to build/bin/, but `go build ./cmd/...` drops it here).
+/${project_name}
+
+# mkdocs build output (`mkdocs build` / `mkdocs build --strict`).
+# The published site is built by CI from source, never from a
+# committed tree.
+site/
+
+# Helm chart packages (output of `helm package`)
+*.tgz
+
+# Donald loop / Claude Code session-local state
+.claude/*.local.md
+
+# Keys and certs
+*.pem
+*.cert
+
+# OS files
+.DS_Store
+Thumbs.db

@@ -5,13 +5,22 @@ name: Release
 # Self-contained ECR release train. On merge to main:
 #   bump-version — semver bump + tag derived from PR labels
 #                  (major/minor/patch/dont-release, created by labels.sh)
+#   binary       — goreleaser: archives + checksums + SBOMs + the GitHub Release
 #   aws-auth     — OIDC role assumption + ECR token for the SLSA jobs
-#   image        — build + push the multi-arch image when a version bumped
-#   chart        — push the Helm chart; idempotent via `helm pull` precheck
-#   *-slsa       — SLSA provenance for both artifacts
+#   image        — multi-arch image via bake, cosign-signed
+#   chart        — Helm chart at the tag-derived version, cosign-signed
+#   *-slsa       — SLSA provenance for image and chart
 #
-# Also dispatchable for ad-hoc republishes: supply `tag` to republish an
-# image, leave it empty to publish only the chart.
+# Versions are lockstep: binary, image, and chart all carry the tag cut
+# by bump-version (the chart strips the leading v). Chart.yaml keeps a
+# 0.0.0-dev placeholder — `helm package --version/--app-version` stamps
+# the real version at publish time. A PR labeled `dont-release`
+# produces no tag, so nothing publishes. The GitHub Release (binary) is
+# registry-independent and is not gated on ECR_PUBLISH_ENABLED.
+#
+# Also dispatchable for ad-hoc republishes: supply the tag; every job
+# is idempotent (existing GitHub release / chart version short-circuit,
+# the image push is a same-content overwrite).
 #
 # Operator prep (one-time, outside this workflow — see
 # docs/publishing-to-ecr.md for the full walkthrough):
@@ -26,7 +35,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Image tag to publish (e.g. v1.8.2). Leave empty to skip image push.'
+        description: 'Tag to republish (e.g. v1.8.2). Binary, image, and chart versions all derive from it.'
         type: string
         required: false
         default: ''
@@ -81,6 +90,56 @@ jobs:
           noop-labels: "dont-release"
           release-notes-prefix: "### RELEASE NOTES"
           with-v: true
+
+  binary:
+    name: Release binary
+    runs-on: ubuntu-latest
+    needs: bump-version
+    if: >-
+      !cancelled() &&
+      needs.bump-version.result != 'failure' &&
+      ((github.event_name == 'workflow_dispatch' && inputs.tag != '') ||
+       (github.event_name == 'push' && needs.bump-version.outputs.skipped != 'true' &&
+        needs.bump-version.outputs.tag != ''))
+    env:
+      TAG: ${{ inputs.tag || needs.bump-version.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ env.TAG }}
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+
+      # goreleaser shells out to syft for the archive SBOMs.
+      - name: Install syft
+        uses: anchore/sbom-action/download-syft@v0
+
+      # Idempotency: a dispatch republish of a tag whose GitHub release
+      # already exists skips goreleaser instead of failing on it.
+      - name: Check for existing release
+        id: exists
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+            echo "Release $TAG already exists, skipping."
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Run GoReleaser
+        if: steps.exists.outputs.exists != 'true' && inputs.dry_run != true
+        uses: goreleaser/goreleaser-action@v7
+        with:
+          version: "~> v2"
+          args: release --clean
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   # Fetches an ECR auth token via OIDC and exposes it (masked) to the
   # downstream SLSA reusable workflows. Token is valid ~12h. Gated on
@@ -164,10 +223,24 @@ jobs:
             type=semver,pattern={{major}}.{{minor}},value=${{ env.TAG }}
             type=raw,value=latest
 
+      # COMMIT from the checked-out tag (github.sha is the trigger
+      # commit, which differs on dispatch republishes of older tags).
+      - name: Resolve build metadata
+        run: |
+          echo "COMMIT_SHA=$(git rev-parse --short HEAD)" >> "$GITHUB_ENV"
+          echo "BUILD_DATE=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_ENV"
+
+      # env feeds the bake variables (VERSION/COMMIT/DATE), which
+      # _common forwards as build args — without this every released
+      # binary reports the 0.0.0-dev defaults.
       - name: Build and push image
         id: bake
         if: inputs.dry_run != true
         uses: docker/bake-action@v7
+        env:
+          VERSION: ${{ env.TAG }}
+          COMMIT: ${{ env.COMMIT_SHA }}
+          DATE: ${{ env.BUILD_DATE }}
         with:
           targets: release
           source: .
@@ -253,12 +326,18 @@ jobs:
     name: Publish chart
     runs-on: ubuntu-latest
     needs: [aws-auth, bump-version]
-    # Runs on every armed main push and on dispatch (bump-version
-    # skipped) — the idempotency precheck makes re-runs a no-op.
+    # Lockstep: the chart version derives from the release tag, so
+    # without a tag there is nothing to publish. The idempotency
+    # precheck keeps re-runs and dispatch republishes no-ops.
     if: >-
       !cancelled() &&
       needs.aws-auth.result == 'success' &&
-      needs.bump-version.result != 'failure'
+      needs.bump-version.result != 'failure' &&
+      ((github.event_name == 'workflow_dispatch' && inputs.tag != '') ||
+       (github.event_name == 'push' && needs.bump-version.outputs.skipped != 'true' &&
+        needs.bump-version.outputs.tag != ''))
+    env:
+      TAG: ${{ inputs.tag || needs.bump-version.outputs.tag }}
     outputs:
       chart_version: ${{ steps.version.outputs.chart_version }}
       digest: ${{ steps.push.outputs.digest }}
@@ -267,6 +346,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
+          ref: ${{ env.TAG }}
           fetch-depth: 0
 
       - uses: azure/setup-helm@v5
@@ -294,10 +374,13 @@ jobs:
         env:
           OUTPUT: ${{ env.CHART_DIR }}/CHANGELOG.md
 
-      - name: Read chart version
+      # Lockstep version: chart version = the tag without its leading v,
+      # appVersion = the tag. Chart.yaml keeps its 0.0.0-dev placeholder
+      # — helm package stamps the real versions below.
+      - name: Derive chart version
         id: version
         run: |
-          chart_version=$(yq '.version' "${CHART_DIR}/Chart.yaml")
+          chart_version="${TAG#v}"
           echo "chart_version=${chart_version}" >> "$GITHUB_OUTPUT"
           echo "Chart version: ${chart_version}"
 
@@ -326,7 +409,10 @@ jobs:
 
       - name: Package chart
         if: steps.idempotency.outputs.exists != 'true'
-        run: helm package "${CHART_DIR}"
+        run: |
+          helm package "${CHART_DIR}" \
+            --version "${{ steps.version.outputs.chart_version }}" \
+            --app-version "${TAG}"
 
       - name: Upload chart artifact (dispatch only)
         if: |

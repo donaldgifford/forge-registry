@@ -8,7 +8,7 @@ on:
   pull_request:
     branches: [main]
   schedule:
-    # Mondays at 0000 — same slot as security.yml's grype scan.
+    # Mondays at 0000 — same slot as security.yml's govulncheck scan.
     - cron: "0 0 * * 1"
 
 permissions:

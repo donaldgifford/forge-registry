@@ -21,6 +21,14 @@ variable "VERSION" {
   default = "0.0.0-dev"
 }
 
+variable "COMMIT" {
+  default = "none"
+}
+
+variable "DATE" {
+  default = "unknown"
+}
+
 group "default" {
   targets = ["${project_name}"]
 }
@@ -38,6 +46,8 @@ target "_common" {
   dockerfile = "Dockerfile"
   args = {
     VERSION = "$${VERSION}"
+    COMMIT  = "$${COMMIT}"
+    DATE    = "$${DATE}"
   }
   labels = {
     "org.opencontainers.image.source"      = "https://github.com/${project_owner}/${project_name}"

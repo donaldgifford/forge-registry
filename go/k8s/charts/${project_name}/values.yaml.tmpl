@@ -58,11 +58,11 @@ podLabels: {}
 # -- Pod security context
 podSecurityContext: {}
 
-# -- Container security context
+# -- Container security context (65532 = distroless nonroot uid)
 securityContext:
   readOnlyRootFilesystem: true
   runAsNonRoot: true
-  runAsUser: 65534
+  runAsUser: 65532
 
 service:
   # -- Service type

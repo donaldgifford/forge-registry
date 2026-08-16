@@ -13,7 +13,8 @@ add:
 
 ```sh
 mise install        # toolchain: go, helm, ct, helm-docs, k3d, ...
-just helm-plugins   # one-time: install the helm-unittest plugin
+just helm-plugins   # one-time: install the helm-unittest + helm-diff plugins
+just helm-docs      # generate charts/${project_name}/README.md
 mkdir -p cmd/${project_name}
 $EDITOR cmd/${project_name}/main.go
 ```
@@ -53,8 +54,11 @@ See the chart README for the full values reference.
 
 Merging to `main` runs the release workflow: the merged PR's semver
 label (`major`/`minor`/`patch`, or `dont-release` to skip) bumps the
-version and pushes the tag, the multi-arch image is built and signed
-with cosign (plus SLSA provenance), and the Helm chart
+version and pushes the tag. Everything releases in lockstep from that
+tag — goreleaser publishes the GitHub Release with binary archives,
+the multi-arch image is built and signed with cosign (plus SLSA
+provenance), and the Helm chart is packaged at the tag-derived version
+(`Chart.yaml` keeps a `0.0.0-dev` placeholder by design) and
 %{ if container_registry == "ghcr" ~}
 is pushed to `oci://ghcr.io/${project_owner}/charts/${project_name}`.
 %{ else ~}

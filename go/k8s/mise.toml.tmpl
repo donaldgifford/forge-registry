@@ -9,9 +9,11 @@ golines = "latest"
 "go:golang.org/x/tools/cmd/goimports" = "latest"
 # renovate: datasource=go depName=golang.org/x/tools
 "go:golang.org/x/tools/cmd/godoc" = "latest"
-# renovate: datasource=go depName=spf13/cobra-cli
-"go:github.com/spf13/cobra-cli" = "latest"
-
+# mockery v3: v2's final release (2.53.6) is built against go1.25 and
+# cannot load this go1.26 module at all, so `make mocks` was a no-op
+# error. See IMPL-0021 Phase 7.
+# renovate: datasource=go depName=github.com/vektra/mockery/v3
+"go:github.com/vektra/mockery/v3" = "latest"
 
 # Repo utilities
 # Formatters and linters
@@ -41,24 +43,36 @@ jq = "latest"
 
 # Release tools
 # renovate: datasource=github-releases depName=golangci/golangci-lint
-golangci-lint = "2.11.4"
+golangci-lint = "2.12.2"
+# renovate: datasource=github-releases depName=goreleaser/goreleaser
+goreleaser = "latest"
 
 # Security
 # renovate: datasource=github-releases depName=anchore/syft
 syft = "latest"
+# renovate: datasource=github-releases depName=anchore/grype
+grype = "latest"
 # renovate: datasource=go depName=golang.org/x/vuln
 "go:golang.org/x/vuln/cmd/govulncheck" = "latest"
 
 # Compliance
 # renovate: datasource=go depName=github.com/google/go-licenses
 "go:github.com/google/go-licenses" = "latest"
+# renovate: datasource=github-releases depName=anchore/grant
+grant = "0.6.8"
 
 # Helm and Kubernetes
 # renovate: datasource=github-releases depName=helm/helm
 helm = "3.19.0"
 # renovate: datasource=github-releases depName=helm/chart-testing
 helm-ct = "3.14.0"
+# renovate: datasource=github-releases depName=databus23/helm-diff
+helm-diff = "latest"
 # renovate: datasource=github-releases depName=norwoodj/helm-docs
 helm-docs = "1.14.2"
+# renovate: datasource=github-releases depName=sigstore/cosign
+cosign = "latest"
+# renovate: datasource=github-releases depName=prometheus/prometheus
+promtool = "latest"
 # renovate: datasource=github-releases depName=k3d-io/k3d
 k3d = "5.8.3"
