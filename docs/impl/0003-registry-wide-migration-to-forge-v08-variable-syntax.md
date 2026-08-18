@@ -577,6 +577,14 @@ after pass 1 merges.
   `docs/examples/*.forge-vars.hcl` files unable to express the provider at all.
   See Phase 6 Findings.
 
+  The one-line fix is **verified working** (reported on forge#42): a patched
+  build resolves an object var-file correctly — attributes drive both templates
+  (`module git.fartlab.dev/homelab/objtest`) and conditions (`.forgejo/`
+  shipped, `.github/` excluded) — and scaffolds all 19 current blueprints with
+  no regression. The patch exists only as a throwaway build; forge itself is
+  untouched. Phase 7 unblocks once the fix lands in a released forge that
+  `forge version` reports.
+
 ## References
 
 - [INV-0001](../investigation/0001-migrate-remaining-blueprints-to-forge-v08-variable-syntax-and.md)
