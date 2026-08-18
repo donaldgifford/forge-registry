@@ -1,6 +1,6 @@
 name        = "homelab-infra"
 description = "Catch-all for non-IaC, non-k8s homelab config (talos, network, proxmox, servers)"
-version     = "0.1.0"
+version     = "0.2.0"
 tags        = ["homelab", "infra", "forgejo"]
 
 # forge v0.8 variable syntax (IMPL-0003): bareword types + `validation`

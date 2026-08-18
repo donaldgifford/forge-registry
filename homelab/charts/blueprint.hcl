@@ -1,6 +1,6 @@
 name        = "homelab-charts"
 description = "Helm charts published as OCI artifacts to Harbor + Forgejo Packages"
-version     = "0.1.0"
+version     = "0.2.0"
 tags        = ["homelab", "helm", "charts", "oci", "forgejo"]
 
 # forge v0.8 variable syntax (IMPL-0003): bareword types + `validation`

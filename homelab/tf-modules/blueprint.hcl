@@ -1,6 +1,6 @@
 name        = "homelab-tf-modules"
 description = "Terraform modules for the homelab, semver-tagged for terragrunt consumers"
-version     = "0.1.0"
+version     = "0.2.0"
 tags        = ["homelab", "terraform", "modules", "forgejo"]
 
 # forge v0.8 variable syntax (IMPL-0003): bareword types + `validation`

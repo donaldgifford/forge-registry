@@ -253,11 +253,11 @@ the old syntax as the convention.
 #### Tasks
 
 - [x] homelab/go: `go_version` `"1.24"` → `"1.26.4"` (family default)
-- [ ] Bump `version` 0.1.0 → 0.2.0 in all 18 migrated `blueprint.hcl` files
+- [x] Bump `version` 0.1.0 → 0.2.0 in all 18 migrated `blueprint.hcl` files
       (go/k8s stays 0.2.0)
-- [ ] registry.hcl: rename the dash-keyed entries (`blueprint "go-std"`,
+- [x] registry.hcl: rename the dash-keyed entries (`blueprint "go-std"`,
       `blueprint "go-kubebuilder"`) to slash form matching the rest
-- [ ] Run `forge registry update --registry-dir .` — expect **zero** `missing`
+- [x] Run `forge registry update --registry-dir .` — expect **zero** `missing`
       warnings; verify every entry shows 0.2.0
 - [ ] Root `CLAUDE.md`: update the Key Conventions variable example from
       `type = "string"` to v0.8 syntax (bareword + `validation`)

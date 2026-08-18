@@ -1,6 +1,6 @@
 name        = "homelab-images"
 description = "Packer image builds for VMs and shared container images"
-version     = "0.1.0"
+version     = "0.2.0"
 tags        = ["homelab", "packer", "images", "forgejo"]
 
 # forge v0.8 variable syntax (IMPL-0003): bareword types + `validation`

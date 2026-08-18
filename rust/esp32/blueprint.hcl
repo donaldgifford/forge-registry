@@ -1,6 +1,6 @@
 name        = "rust-esp32"
 description = "Rust ESP32 Repo"
-version     = "0.1.0"
+version     = "0.2.0"
 tags        = ["rust", "esp32"]
 
 # forge v0.8 variable syntax (IMPL-0003): bareword types + `validation`
