@@ -203,7 +203,7 @@ go/k8s pinned-defaults pattern: GitHub-pinned scalars, no `git_provider` prompt,
 - [x] go/ext + go/kubebuilder: declare `go_version` (default `"1.26.4"`) —
       gap not caught by the INV-0001 inventory; `go/_defaults/CLAUDE.md.tmpl`,
       `mise.toml.tmpl` and `go.mod.tmpl` all reference it
-- [ ] go/kubebuilder: add `hooks { post_create = ["git init", "go mod tidy"] }`
+- [x] go/kubebuilder: add `hooks { post_create = ["git init", "go mod tidy"] }`
       (drive-by; it inherits `go/_defaults/go.mod.tmpl` so tidy is applicable)
 
 #### Success Criteria

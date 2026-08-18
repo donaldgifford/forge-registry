@@ -113,3 +113,10 @@ defaults {
     ".forgejo/ISSUE_TEMPLATE/refactor.yml",
   ]
 }
+
+# Decoded but not yet executed by forge (forge#41) — declared so the
+# scaffold is correct once hook execution lands. go.mod ships from
+# go/_defaults, so `go mod tidy` is applicable here.
+hooks {
+  post_create = ["git init", "go mod tidy"]
+}
