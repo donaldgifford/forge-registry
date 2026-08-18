@@ -3,17 +3,18 @@ description = "Forge Registry"
 
 blueprint "go/std" {
   path          = "go/std"
-  description   = "Go Standard Repository"
+  description   = "Go Standard Repo"
   version       = "0.2.0"
-  latest_commit = "61b40bf3c79636baf0cd4209ce7d7422c1313166"
+  tags          = ["go", "std"]
+  latest_commit = "5160a46c3eb1e9b2a3499cfc02c00a9181243345"
 }
 
 blueprint "go/ext" {
   path          = "go/ext"
-  description   = "Go Extended Repository"
+  description   = "Go extended blueprint"
   version       = "0.2.0"
-  tags          = ["go", "extended", "makefile"]
-  latest_commit = "7f47f03efb859e1f078e53f1609ac4e203f7b6ac"
+  tags          = ["go", "extended"]
+  latest_commit = "5160a46c3eb1e9b2a3499cfc02c00a9181243345"
 }
 
 blueprint "rust/std" {
@@ -21,7 +22,7 @@ blueprint "rust/std" {
   description   = "Rust Standard Repo"
   version       = "0.2.0"
   tags          = ["rust", "std"]
-  latest_commit = "7f47f03efb859e1f078e53f1609ac4e203f7b6ac"
+  latest_commit = "5160a46c3eb1e9b2a3499cfc02c00a9181243345"
 }
 
 blueprint "rust/esp32" {
@@ -29,7 +30,7 @@ blueprint "rust/esp32" {
   description   = "Rust ESP32 Repo"
   version       = "0.2.0"
   tags          = ["rust", "esp32"]
-  latest_commit = "7f47f03efb859e1f078e53f1609ac4e203f7b6ac"
+  latest_commit = "5160a46c3eb1e9b2a3499cfc02c00a9181243345"
 }
 
 blueprint "go/kubebuilder" {
@@ -37,15 +38,15 @@ blueprint "go/kubebuilder" {
   description   = "Go Kubernetes operator blueprint (kubebuilder)"
   version       = "0.2.0"
   tags          = ["go", "kubebuilder", "operator", "kubernetes"]
-  latest_commit = "8643b869970ab2fe0ba463d90386926b99c116b3"
+  latest_commit = "5160a46c3eb1e9b2a3499cfc02c00a9181243345"
 }
 
 blueprint "std/new" {
   path          = "std/new"
-  description   = "new std"
+  description   = "Generic std blueprint with multi-provider (github / forgejo) support"
   version       = "0.2.0"
   tags          = ["std", "new"]
-  latest_commit = "8be5bae5019874983251ea7cd863cd7d13d19de7"
+  latest_commit = "5160a46c3eb1e9b2a3499cfc02c00a9181243345"
 }
 
 blueprint "homelab/k8s" {
@@ -53,7 +54,7 @@ blueprint "homelab/k8s" {
   description   = "ArgoCD-managed Kubernetes manifests for the homelab cluster"
   version       = "0.2.0"
   tags          = ["homelab", "k8s", "kustomize", "argocd", "forgejo"]
-  latest_commit = "dccc765881a433306c620d108d54f9012b778984"
+  latest_commit = "5160a46c3eb1e9b2a3499cfc02c00a9181243345"
 }
 
 blueprint "homelab/tf-modules" {
@@ -61,7 +62,7 @@ blueprint "homelab/tf-modules" {
   description   = "Terraform modules for the homelab, semver-tagged for terragrunt consumers"
   version       = "0.2.0"
   tags          = ["homelab", "terraform", "modules", "forgejo"]
-  latest_commit = "dccc765881a433306c620d108d54f9012b778984"
+  latest_commit = "5160a46c3eb1e9b2a3499cfc02c00a9181243345"
 }
 
 blueprint "homelab/tf-live" {
@@ -69,7 +70,7 @@ blueprint "homelab/tf-live" {
   description   = "Terragrunt live config + boilerplate templates, plan/apply via Atlantis"
   version       = "0.2.0"
   tags          = ["homelab", "terraform", "terragrunt", "atlantis", "forgejo"]
-  latest_commit = "dccc765881a433306c620d108d54f9012b778984"
+  latest_commit = "5160a46c3eb1e9b2a3499cfc02c00a9181243345"
 }
 
 blueprint "homelab/images" {
@@ -77,7 +78,7 @@ blueprint "homelab/images" {
   description   = "Packer image builds for VMs and shared container images"
   version       = "0.2.0"
   tags          = ["homelab", "packer", "images", "forgejo"]
-  latest_commit = "dccc765881a433306c620d108d54f9012b778984"
+  latest_commit = "5160a46c3eb1e9b2a3499cfc02c00a9181243345"
 }
 
 blueprint "homelab/charts" {
@@ -85,7 +86,7 @@ blueprint "homelab/charts" {
   description   = "Helm charts published as OCI artifacts to Harbor + Forgejo Packages"
   version       = "0.2.0"
   tags          = ["homelab", "helm", "charts", "oci", "forgejo"]
-  latest_commit = "dccc765881a433306c620d108d54f9012b778984"
+  latest_commit = "5160a46c3eb1e9b2a3499cfc02c00a9181243345"
 }
 
 blueprint "homelab/infra" {
@@ -93,7 +94,7 @@ blueprint "homelab/infra" {
   description   = "Catch-all for non-IaC, non-k8s homelab config (talos, network, proxmox, servers)"
   version       = "0.2.0"
   tags          = ["homelab", "infra", "forgejo"]
-  latest_commit = "dccc765881a433306c620d108d54f9012b778984"
+  latest_commit = "5160a46c3eb1e9b2a3499cfc02c00a9181243345"
 }
 
 blueprint "homelab/docs" {
@@ -101,15 +102,15 @@ blueprint "homelab/docs" {
   description   = "Docusaurus site that aggregates docs from every homelab repo at build time"
   version       = "0.2.0"
   tags          = ["homelab", "docs", "docusaurus", "forgejo"]
-  latest_commit = "dccc765881a433306c620d108d54f9012b778984"
+  latest_commit = "5160a46c3eb1e9b2a3499cfc02c00a9181243345"
 }
 
 blueprint "homelab/go" {
   path          = "homelab/go"
-  description   = "Go project blueprint with homelab conventions (forgejo default, github mirror)"
+  description   = "Go project blueprint with homelab conventions (forgejo default, github for mirror)"
   version       = "0.2.0"
   tags          = ["homelab", "go", "forgejo"]
-  latest_commit = "efea98d436b6e0b73f1d675f435d9b6498a55334"
+  latest_commit = "5160a46c3eb1e9b2a3499cfc02c00a9181243345"
 }
 
 blueprint "go/docker" {
@@ -117,7 +118,7 @@ blueprint "go/docker" {
   description   = "go docker blueprint"
   version       = "0.2.0"
   tags          = ["go", "docker"]
-  latest_commit = "8be5bae5019874983251ea7cd863cd7d13d19de7"
+  latest_commit = "5160a46c3eb1e9b2a3499cfc02c00a9181243345"
 }
 
 blueprint "bun/std" {
@@ -125,7 +126,7 @@ blueprint "bun/std" {
   description   = "bunjs typescript blueprint"
   version       = "0.2.0"
   tags          = ["bun", "typescript"]
-  latest_commit = "cc7eedbd16840358d1d3c9b1cf145899fa0dfbc4"
+  latest_commit = "5160a46c3eb1e9b2a3499cfc02c00a9181243345"
 }
 
 blueprint "go/cli" {
@@ -133,7 +134,7 @@ blueprint "go/cli" {
   description   = "go cli blueprint"
   version       = "0.2.0"
   tags          = ["go", "cli"]
-  latest_commit = "a833a3ccc27265827fd724790534be4e07b75640"
+  latest_commit = "5160a46c3eb1e9b2a3499cfc02c00a9181243345"
 }
 
 blueprint "std/docs" {
@@ -141,7 +142,7 @@ blueprint "std/docs" {
   description   = "docs repo blueprint"
   version       = "0.2.0"
   tags          = ["std", "docs"]
-  latest_commit = "5a43daef6d2cf93d92070cf5f1aab9b17c5f723e"
+  latest_commit = "5160a46c3eb1e9b2a3499cfc02c00a9181243345"
 }
 
 blueprint "go/k8s" {

@@ -1,7 +1,7 @@
 name        = "go-std"
 description = "Go Standard Repo"
 version     = "0.2.0"
-tags        = ["go-std"]
+tags        = ["go", "std"]
 
 # forge v0.8 variable syntax (IMPL-0003): bareword types + `validation`
 # blocks. The legacy choice/choices/validate forms are rejected at load
