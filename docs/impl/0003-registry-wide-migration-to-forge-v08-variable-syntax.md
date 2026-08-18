@@ -316,26 +316,70 @@ empirically first (INV-0001-style scratch registry) before touching real files.
 
 #### Tasks
 
-- [ ] Scratch-test object semantics on forge 0.8: does a fully-defaulted object
+- [x] Scratch-test object semantics on forge 0.8: does a fully-defaulted object
       skip prompting; can an object `default` carry cross-variable/ternary
       expressions; does `--set` of a partial object literal merge or replace;
       how do field-level validation failures read
-- [ ] Freeze the object shape (issue #14 proposal:
+- [x] Freeze the object shape (issue #14 proposal:
       `name`/`org`/`host`/`renovate_config_prefix`) with GitHub default values
       (INV-0001 OQ-2a carries over)
-- [ ] Grep-inventory every `${project_org}` / `${git_host}` /
+- [x] Grep-inventory every `${project_org}` / `${git_host}` /
       `${renovate_config_prefix}` reference across all `_defaults/` levels and
       blueprint-owned templates (INV-0001 Observation 5 is the seed list)
-- [ ] Draft the forgejo supply story: a `.forge-vars.hcl` overlay carrying the
-      full object (fartlab values), validated in the scratch registry
-- [ ] Record confirmed semantics + final shape on issue #14
+- [x] Draft the forgejo supply story: a `.forge-vars.hcl` overlay carrying the
+      full object (fartlab values), validated in the scratch registry —
+      **blocked by forge#42**, see findings
+- [x] Record confirmed semantics + final shape on issue #14
+      ([comment](https://github.com/donaldgifford/forge-registry/issues/14#issuecomment-5332115111))
+
+#### Findings
+
+Scratch registry at `/tmp/p6-reg` (copy of this branch), forge 0.8.0
+(`806263d`). **The shape is validated; the supply channel is blocked.**
+
+Working as designed:
+
+- A fully-defaulted object needs no prompt and no supply.
+- Templates traverse it natively — the 9 shared `_defaults` templates rewritten
+  to `${git_provider.org}` / `.host` / `.renovate_config_prefix` render
+  correctly (`module github.com/donaldgifford/objtest`).
+- `condition { when = git_provider.name != "github" }` works.
+- Field-level validation reads well:
+  `git_provider.name must be one of: forgejo, github.` with position.
+- `--set` with a **full** object literal works (forgejo variant, 34 files).
+
+Blocked — **forge#42**: the same object supplied via `--var-file` fails with
+`converting variables to cty: variable "git_provider": object required, but have string`.
+Root cause is `ctyToGo` in forge's `internal/prompt/prompt.go` returning
+`val.GoString()` (the Go debug representation) for non-primitive types — a stale
+"vars files are scalar-only" assumption from IMPL-0008 that IMPL-0009
+invalidated. The var-file loader itself is correct: it type-checks the object
+and rejects partials with a good message.
+
+Constraint — **objects replace, never merge**. All attributes are required on
+every supply, and `optional(string)` / `optional(string, "default")` modifiers
+are rejected
+(`Optional attribute modifier is only for type constraints, not for exact types`).
+So today's `--set git_provider=forgejo` — which re-derives org/host/prefix
+through the ternaries — has no post-migration equivalent; switching providers
+means restating all four fields.
+
+Scope is larger than the `_defaults`-only estimate: **169 references across ~40
+template files** (`project_org` 103/32, `git_host` 38/27,
+`renovate_config_prefix` 28/6), including blueprint-owned templates like
+`homelab/*/CLAUDE.md.tmpl`, `homelab/docs/docusaurus.config.js.tmpl`,
+`homelab/go/.goreleaser.yml.tmpl`, `go/k8s/renovate.json5.tmpl` and
+`std/_defaults/cliff.toml.tmpl`.
 
 #### Success Criteria
 
-- Object default/prompt/`--set` behavior is confirmed empirically, not assumed
-- Final object shape and the complete template-reference inventory are posted to
-  issue #14
-- The forgejo overlay renders correctly in the scratch registry
+- [x] Object default/prompt/`--set` behavior is confirmed empirically, not
+      assumed
+- [x] Final object shape and the complete template-reference inventory are
+      posted to issue #14
+- [ ] The forgejo overlay renders correctly in the scratch registry — **not
+      met**: blocked by forge#42. Phase 7 is gated on that fix (see
+      Dependencies).
 
 ---
 
@@ -490,7 +534,13 @@ after pass 1 merges.
 - forge#41 (hooks never executed) — hook edits in Phases 1–2 are forward-looking
   only.
 - Phases 6–8 start only after the pass-1 PR merges; issue #14 stays open as the
-  pass-2 tracker until Phase 8 closes it.
+  pass-2 tracker until Phase 8 closes it. (Phase 6 is scratch-only research and
+  ran ahead of the merge without touching the registry.)
+- **Phase 7 is gated on forge#42** — var-files cannot supply object variables in
+  forge 0.8.0. Migrating before that fix ships would leave a shell-quoted
+  `--set` literal as the only way to switch providers, and would make the
+  `docs/examples/*.forge-vars.hcl` files unable to express the provider at all.
+  See Phase 6 Findings.
 
 ## References
 
@@ -499,6 +549,8 @@ after pass 1 merges.
 - forge `docs/MIGRATION.md` — "Variable type system upgrade (v0.7+)"
 - forge-registry issue #14 — pass 2 (`git_provider` object)
 - forge#41 — RunPostCreate hooks never invoked
+- forge#42 — var-files cannot supply object/list/map variables (blocks Phase 7;
+  filed from Phase 6 findings)
 - `go/k8s/blueprint.hcl` — reference v0.8 blueprint (pinned-defaults +
   `defaults { exclude }` pattern)
 - DESIGN-0004 / IMPL-0002 — where the go/k8s pattern was established
