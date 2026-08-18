@@ -38,7 +38,7 @@ variable "license" {
 variable "go_version" {
   description = "Go toolchain version (matches go.mod, mise.toml, Dockerfile)"
   type        = string
-  default     = "1.24"
+  default     = "1.26.4"
 }
 
 # Single source of truth — drives project_org / git_host / renovate_config_prefix.

@@ -252,7 +252,7 @@ the old syntax as the convention.
 
 #### Tasks
 
-- [ ] homelab/go: `go_version` `"1.24"` → `"1.26.4"` (family default)
+- [x] homelab/go: `go_version` `"1.24"` → `"1.26.4"` (family default)
 - [ ] Bump `version` 0.1.0 → 0.2.0 in all 18 migrated `blueprint.hcl` files
       (go/k8s stays 0.2.0)
 - [ ] registry.hcl: rename the dash-keyed entries (`blueprint "go-std"`,
