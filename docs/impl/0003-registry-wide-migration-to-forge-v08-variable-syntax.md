@@ -292,7 +292,7 @@ Prove every blueprint scaffolds, then ship the single PR.
       go/k8s ghcr + ecr scaffolds unchanged (regression guard for the shared
       `_defaults/`)
 - [x] Repo linters clean (yamllint / markdownlint-cli2 / prettier)
-- [ ] Commit (drive-bys called out in the message), push, open the single
+- [x] Commit (drive-bys called out in the message), push, open the single
       registry-wide PR referencing INV-0001 + this doc, with issue #14 linked as
       pass 2 (Phases 6–8)
 - [ ] After merge: check off pass 1 here and start Phase 6
