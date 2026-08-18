@@ -147,7 +147,7 @@ Observation 4.
       `git_provider` enums, `git_provider` default `"github"`; ternary defaults
       and `condition` blocks untouched; delete the trailing commented-out
       `backstage_tags` block
-- [ ] Propagate the migrated body to go/docker and std/new (preserve each file's
+- [x] Propagate the migrated body to go/docker and std/new (preserve each file's
       `name`/`description`/`tags` header)
 - [ ] Migrate bun/std (same shape; `bun_version`/`node_version` in place of
       `go_version`)
