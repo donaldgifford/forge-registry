@@ -46,6 +46,30 @@ variable "license" {
   }
 }
 
+# ─── Inherited _defaults template surface ────────────────────────────
+# This blueprint is GitHub-pinned: no git_provider prompt, so the vars
+# the inherited renovate/catalog/CONTRIBUTING templates reference are
+# declared with GitHub defaults (same pattern as go/k8s, IMPL-0003
+# OQ-3a). The registry-root .forgejo/ tree is excluded below.
+
+variable "project_org" {
+  description = "Org/user owning the repo"
+  type        = string
+  default     = "${project_owner}"
+}
+
+variable "git_host" {
+  description = "Hostname of the git provider"
+  type        = string
+  default     = "github.com"
+}
+
+variable "renovate_config_prefix" {
+  description = "Renovate `extends:` source prefix"
+  type        = string
+  default     = "github"
+}
+
 hooks {
   post_create = ["git init"]
 }

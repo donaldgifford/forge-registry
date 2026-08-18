@@ -186,7 +186,7 @@ go/k8s pinned-defaults pattern: GitHub-pinned scalars, no `git_provider` prompt,
 - [x] rust/std + rust/esp32: add `project_owner` (required, kebab-case
       validation) — inherited `justfile.tmpl` and `CONTRIBUTING.md.tmpl`
       reference it
-- [ ] All four: add pinned scalars — `project_org` (default
+- [x] All four: add pinned scalars — `project_org` (default
       `"${project_owner}"`), `git_host` (default `"github.com"`),
       `renovate_config_prefix` (default `"github"`)
 - [ ] All four: add the four Backstage `project_component_*` variables as
