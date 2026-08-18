@@ -183,7 +183,7 @@ go/k8s pinned-defaults pattern: GitHub-pinned scalars, no `git_provider` prompt,
 
 - [x] Syntax swap in all four (validate → validation, license enum →
       `contains()`, bareword types)
-- [ ] rust/std + rust/esp32: add `project_owner` (required, kebab-case
+- [x] rust/std + rust/esp32: add `project_owner` (required, kebab-case
       validation) — inherited `justfile.tmpl` and `CONTRIBUTING.md.tmpl`
       reference it
 - [ ] All four: add pinned scalars — `project_org` (default

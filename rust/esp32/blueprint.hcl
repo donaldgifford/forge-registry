@@ -18,6 +18,17 @@ variable "project_name" {
   }
 }
 
+variable "project_owner" {
+  description = "Owner of the project"
+  type        = string
+  required    = true
+
+  validation {
+    condition     = can(regex("^[a-z][a-z0-9-]*$", var.project_owner))
+    error_message = "project_owner must be lowercase kebab-case (letters, digits, hyphens; starts with a letter)."
+  }
+}
+
 variable "project_description" {
   description = "Description of the project"
   type        = string
