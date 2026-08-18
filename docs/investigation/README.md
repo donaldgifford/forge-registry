@@ -9,6 +9,11 @@ Design docs, plans, and implementation docs can reference investigations by ID
 (e.g. `INV-0001`) to document how open questions were resolved.
 
 <!-- BEGIN DOCZ AUTO-GENERATED -->
+## All Investigations
+
+| ID | Title | Status | Date | Author | Link |
+|----|-------|--------|------|--------|------|
+| INV-0001 | Migrate remaining blueprints to forge v0.8 variable syntax and types | Concluded | 2026-08-17 | Donald Gifford | [0001-migrate-remaining-blueprints-to-forge-v08-variable-syntax-and.md](0001-migrate-remaining-blueprints-to-forge-v08-variable-syntax-and.md) |
 <!-- END DOCZ AUTO-GENERATED -->
 <!-- BEGIN DOCZ AUTO-GENERATED -->
 <!-- END DOCZ AUTO-GENERATED -->
