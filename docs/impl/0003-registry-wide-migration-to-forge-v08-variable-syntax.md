@@ -283,15 +283,15 @@ Prove every blueprint scaffolds, then ship the single PR.
 
 #### Tasks
 
-- [ ] Write `scripts/scaffold-smoke.sh` (OQ-3a) and smoke-scaffold all 19
+- [x] Write `scripts/scaffold-smoke.sh` (OQ-3a) and smoke-scaffold all 19
       blueprints with minimal `--set` vars into a tmpdir: assert exit 0 and
       non-empty output for each
-- [ ] Negative matrix: bad `license`, `git_provider`, and `container_registry`
+- [x] Negative matrix: bad `license`, `git_provider`, and `container_registry`
       values each fail with a validation error
-- [ ] Variant spot-checks: one cluster blueprint with `git_provider=forgejo`;
+- [x] Variant spot-checks: one cluster blueprint with `git_provider=forgejo`;
       go/k8s ghcr + ecr scaffolds unchanged (regression guard for the shared
       `_defaults/`)
-- [ ] Repo linters clean (yamllint / markdownlint-cli2 / prettier)
+- [x] Repo linters clean (yamllint / markdownlint-cli2 / prettier)
 - [ ] Commit (drive-bys called out in the message), push, open the single
       registry-wide PR referencing INV-0001 + this doc, with issue #14 linked as
       pass 2 (Phases 6–8)
