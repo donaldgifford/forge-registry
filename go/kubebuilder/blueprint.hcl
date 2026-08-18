@@ -3,30 +3,46 @@ description = "Go Kubernetes operator blueprint (kubebuilder)"
 version     = "0.1.0"
 tags        = ["go", "kubebuilder", "operator", "kubernetes"]
 
+# forge v0.8 variable syntax (IMPL-0003): bareword types + `validation`
+# blocks. The legacy choice/choices/validate forms are rejected at load
+# time from v0.8 on.
+
 variable "project_name" {
   description = "Name of the project"
-  type        = "string"
+  type        = string
   required    = true
-  validate    = "^[a-z][a-z0-9-]*$"
+
+  validation {
+    condition     = can(regex("^[a-z][a-z0-9-]*$", var.project_name))
+    error_message = "project_name must be lowercase kebab-case (letters, digits, hyphens; starts with a letter)."
+  }
 }
 
 variable "project_owner" {
   description = "Owner of the project"
-  type        = "string"
+  type        = string
   required    = true
-  validate    = "^[a-z][a-z0-9-]*$"
+
+  validation {
+    condition     = can(regex("^[a-z][a-z0-9-]*$", var.project_owner))
+    error_message = "project_owner must be lowercase kebab-case (letters, digits, hyphens; starts with a letter)."
+  }
 }
 
 variable "project_description" {
   description = "Description of the project"
-  type        = "string"
+  type        = string
   required    = true
 }
 
 variable "license" {
   description = "License type"
-  type        = "choice"
-  choices     = ["MIT", "Apache-2.0", "BSD-3-Clause", "none"]
+  type        = string
   default     = "Apache-2.0"
+
+  validation {
+    condition     = contains(["MIT", "Apache-2.0", "BSD-3-Clause", "none"], var.license)
+    error_message = "license must be one of: MIT, Apache-2.0, BSD-3-Clause, none."
+  }
 }
 
