@@ -46,6 +46,30 @@ variable "license" {
   }
 }
 
+variable "project_component_type" {
+  description = "Backstage Entity Component Type"
+  type        = string
+  required    = true
+}
+
+variable "project_component_system" {
+  description = "Backstage Entity Component reference System"
+  type        = string
+  required    = true
+}
+
+variable "project_component_lifecycle" {
+  description = "Backstage Entity Component lifecycle"
+  type        = string
+  required    = true
+}
+
+variable "project_component_owner" {
+  description = "Backstage Entity Component Owner"
+  type        = string
+  required    = true
+}
+
 # ─── Inherited _defaults template surface ────────────────────────────
 # This blueprint is GitHub-pinned: no git_provider prompt, so the vars
 # the inherited renovate/catalog/CONTRIBUTING templates reference are

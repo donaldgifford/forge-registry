@@ -189,7 +189,7 @@ go/k8s pinned-defaults pattern: GitHub-pinned scalars, no `git_provider` prompt,
 - [x] All four: add pinned scalars — `project_org` (default
       `"${project_owner}"`), `git_host` (default `"github.com"`),
       `renovate_config_prefix` (default `"github"`)
-- [ ] All four: add the four Backstage `project_component_*` variables as
+- [x] All four: add the four Backstage `project_component_*` variables as
       `required = true` (OQ-2b — go/k8s parity, explicit Backstage identity)
 - [ ] All four: `defaults { exclude }` of the root `.forgejo/` relpaths — copy
       the exact-relpath list from `go/k8s/blueprint.hcl` (no globs)
