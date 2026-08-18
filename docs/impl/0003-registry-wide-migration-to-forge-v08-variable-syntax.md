@@ -154,9 +154,9 @@ Observation 4.
 - [x] Migrate std/docs; merge its two `git_provider != "github"` conditions into
       one exclude list; drop the commented-out hooks blocks (hooks don't execute
       — forge#41)
-- [ ] Migrate the 7 identical homelab bodies + homelab/go (superset with
+- [x] Migrate the 7 identical homelab bodies + homelab/go (superset with
       `go_version` and the two-command hook)
-- [ ] Flip `git_provider` default to `"github"` in all 13
+- [x] Flip `git_provider` default to `"github"` in all 13
 
 #### Success Criteria
 
