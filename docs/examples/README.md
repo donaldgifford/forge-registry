@@ -75,5 +75,23 @@ git_provider = {
 extra_topics = ["go", "kubernetes", "helm"]
 ```
 
-Until that migration lands, the registry's blueprints use `string` and `bool`
-variables only — see the go/k8s example files for the real surface.
+Until that migration lands (IMPL-0003 Phases 6–8), the registry's blueprints use
+`string` and `bool` variables only — see the example files for the real surface.
+
+## Value constraints
+
+Every blueprint is on the forge v0.8 variable syntax (IMPL-0003), so enum-like
+variables are enforced by `validation` blocks rather than a `choices` list.
+Supplying an out-of-range value fails before any file is written, with the
+blueprint's own error message and the offending declaration's position:
+
+```console
+$ forge create go/cli --registry-dir . --output-dir demo \
+    --set git_provider=gitlab ...
+Error: validating variables: git_provider must be one of: forgejo, github.
+  (variable "git_provider", go/cli/blueprint.hcl:44,3-13)
+```
+
+The same applies to `license` and, for go/k8s, `container_registry`. Variables
+constrained this way are listed with their allowed values in each blueprint's
+`blueprint.hcl`.

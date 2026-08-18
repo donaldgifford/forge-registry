@@ -120,13 +120,13 @@ this plan builds on:
 - Blueprints missing variables referenced by inherited `_defaults/` templates
   fail at **render** time (`Unknown variable`), not load time — the go/k8s fix
   (pinned scalars + `defaults { exclude }`) is the proven remedy.
-- Render errors surface **one variable at a time**, so the surface gap is
-  found iteratively. The authoritative check is grepping single-`$`
-  `${var}` references in inherited `.tmpl` files: `$${...}` is an escape for
-  downstream tools, and non-`.tmpl` files (e.g. `scripts/labels.sh`, whose
+- Render errors surface **one variable at a time**, so the surface gap is found
+  iteratively. The authoritative check is grepping single-`$` `${var}`
+  references in inherited `.tmpl` files: `$${...}` is an escape for downstream
+  tools, and non-`.tmpl` files (e.g. `scripts/labels.sh`, whose
   `${color}`/`${repo_name}` are shell locals) are copied verbatim and never
-  parsed. Phase 2 found `go_version` this way — it was missing from the
-  INV-0001 inventory table.
+  parsed. Phase 2 found `go_version` this way — it was missing from the INV-0001
+  inventory table.
 - Hooks are decoded but never executed (forge#41) — hook edits here are
   forward-looking, not testable.
 
@@ -200,8 +200,8 @@ go/k8s pinned-defaults pattern: GitHub-pinned scalars, no `git_provider` prompt,
       `required = true` (OQ-2b — go/k8s parity, explicit Backstage identity)
 - [x] All four: `defaults { exclude }` of the root `.forgejo/` relpaths — copy
       the exact-relpath list from `go/k8s/blueprint.hcl` (no globs)
-- [x] go/ext + go/kubebuilder: declare `go_version` (default `"1.26.4"`) —
-      gap not caught by the INV-0001 inventory; `go/_defaults/CLAUDE.md.tmpl`,
+- [x] go/ext + go/kubebuilder: declare `go_version` (default `"1.26.4"`) — gap
+      not caught by the INV-0001 inventory; `go/_defaults/CLAUDE.md.tmpl`,
       `mise.toml.tmpl` and `go.mod.tmpl` all reference it
 - [x] go/kubebuilder: add `hooks { post_create = ["git init", "go mod tidy"] }`
       (drive-by; it inherits `go/_defaults/go.mod.tmpl` so tidy is applicable)
@@ -259,12 +259,12 @@ the old syntax as the convention.
       `blueprint "go-kubebuilder"`) to slash form matching the rest
 - [x] Run `forge registry update --registry-dir .` — expect **zero** `missing`
       warnings; verify every entry shows 0.2.0
-- [ ] Root `CLAUDE.md`: update the Key Conventions variable example from
+- [x] Root `CLAUDE.md`: update the Key Conventions variable example from
       `type = "string"` to v0.8 syntax (bareword + `validation`)
-- [ ] `docs/examples/README.md`: replace the "Until that migration lands…"
+- [x] `docs/examples/README.md`: replace the "Until that migration lands…"
       paragraph — the registry is now fully v0.8; note that enum values are
       enforced by `validation` blocks
-- [ ] Add `docs/examples/go-cli.forge-vars.hcl` showing the migrated cluster
+- [x] Add `docs/examples/go-cli.forge-vars.hcl` showing the migrated cluster
       surface (provider + enum + Backstage vars)
 
 #### Success Criteria

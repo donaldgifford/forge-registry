@@ -33,7 +33,27 @@ index is `registry.hcl` at the repo root.
 ## Key Conventions
 
 - **Blueprint variables** are defined in `blueprint.hcl` as `variable "name"
-  { type = "string", description = …, default = …, required = … }` blocks.
+  { type = string, description = …, default = …, required = … }` blocks.
+  Types are **barewords** (`string`, `bool`, `number`, `object({…})`,
+  `list(T)`, `map(T)`) — quoted type tags and the legacy `type = "choice"` /
+  `choices` / `validate = "<regex>"` forms were removed in forge v0.7 and
+  are load errors from v0.8 on. Constrain values with `validation` blocks:
+
+  ```hcl
+  variable "license" {
+    description = "License type"
+    type        = string
+    default     = "Apache-2.0"
+
+    validation {
+      condition     = contains(["MIT", "Apache-2.0", "none"], var.license)
+      error_message = "license must be one of: MIT, Apache-2.0, none."
+    }
+  }
+  ```
+
+  Conditions reference variables bare (`when = git_provider != "github"`),
+  while `validation` conditions use the `var.` namespace.
 - **Template files** use `.tmpl` extension and HCL2 syntax. Files without
   `.tmpl` are copied verbatim and never parsed by the engine.
 - **`_defaults/` directories** provide inherited files — category-level defaults
