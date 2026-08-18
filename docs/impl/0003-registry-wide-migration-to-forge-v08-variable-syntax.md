@@ -151,7 +151,7 @@ Observation 4.
       `name`/`description`/`tags` header)
 - [x] Migrate bun/std (same shape; `bun_version`/`node_version` in place of
       `go_version`)
-- [ ] Migrate std/docs; merge its two `git_provider != "github"` conditions into
+- [x] Migrate std/docs; merge its two `git_provider != "github"` conditions into
       one exclude list; drop the commented-out hooks blocks (hooks don't execute
       — forge#41)
 - [ ] Migrate the 7 identical homelab bodies + homelab/go (superset with
