@@ -53,6 +53,7 @@ created: 2026-08-18
   - [4. Pass-2 (#14 object consolidation) planning](#4-pass-2-14-object-consolidation-planning)
 - [Dependencies](#dependencies)
 - [References](#references)
+
 <!--toc:end-->
 
 ## Objective
@@ -389,7 +390,8 @@ Root cause is `ctyToGo` in forge's `internal/prompt/prompt.go` returning
 `val.GoString()` (the Go debug representation) for non-primitive types — a stale
 "vars files are scalar-only" assumption from IMPL-0008 that IMPL-0009
 invalidated. The var-file loader itself is correct: it type-checks the object
-and rejects partials with a good message.
+and rejects partials with a good message. **Fix open as forge#43** — see
+Dependencies.
 
 Constraint — **objects replace, never merge**. All attributes are required on
 every supply, and `optional(string)` / `optional(string, "default")` modifiers
@@ -577,12 +579,23 @@ after pass 1 merges.
   `docs/examples/*.forge-vars.hcl` files unable to express the provider at all.
   See Phase 6 Findings.
 
-  The one-line fix is **verified working** (reported on forge#42): a patched
-  build resolves an object var-file correctly — attributes drive both templates
+  The fix is **written, tested, and open as forge#43**. A build of that branch
+  resolves an object var-file correctly — attributes drive both templates
   (`module git.fartlab.dev/homelab/objtest`) and conditions (`.forgejo/`
-  shipped, `.github/` excluded) — and scaffolds all 19 current blueprints with
-  no regression. The patch exists only as a throwaway build; forge itself is
-  untouched. Phase 7 unblocks once the fix lands in a released forge that
+  shipped, `.github/` excluded), field-level `validation` still fires through
+  the var-file path — and scaffolds all 19 current blueprints with no
+  regression. Three regression tests fail on forge `main` and pass on the
+  branch.
+
+  forge#43 also fixes a second arm of the same root cause, found while writing
+  those tests: `goToCty` stringified an already-resolved `cty.Value` when
+  building the `hcl.EvalContext`, so a later variable's default could not
+  traverse into an object attribute (`${git_provider.host}/${git_provider.org}`)
+  — on the `--set` object path as well as the var-file path. Phase 7's Task 3
+  depends on that working, since several `_defaults` templates compose provider
+  attributes into other variables' defaults.
+
+  Phase 7 unblocks once forge#43 merges and lands in a released forge that
   `forge version` reports.
 
 ## References
@@ -593,7 +606,7 @@ after pass 1 merges.
 - forge-registry issue #14 — pass 2 (`git_provider` object)
 - forge#41 — RunPostCreate hooks never invoked
 - forge#42 — var-files cannot supply object/list/map variables (blocks Phase 7;
-  filed from Phase 6 findings)
+  filed from Phase 6 findings); fix open as forge#43
 - `go/k8s/blueprint.hcl` — reference v0.8 blueprint (pinned-defaults +
   `defaults { exclude }` pattern)
 - DESIGN-0004 / IMPL-0002 — where the go/k8s pattern was established
