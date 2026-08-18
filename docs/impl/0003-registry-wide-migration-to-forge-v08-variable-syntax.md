@@ -120,6 +120,13 @@ this plan builds on:
 - Blueprints missing variables referenced by inherited `_defaults/` templates
   fail at **render** time (`Unknown variable`), not load time — the go/k8s fix
   (pinned scalars + `defaults { exclude }`) is the proven remedy.
+- Render errors surface **one variable at a time**, so the surface gap is
+  found iteratively. The authoritative check is grepping single-`$`
+  `${var}` references in inherited `.tmpl` files: `$${...}` is an escape for
+  downstream tools, and non-`.tmpl` files (e.g. `scripts/labels.sh`, whose
+  `${color}`/`${repo_name}` are shell locals) are copied verbatim and never
+  parsed. Phase 2 found `go_version` this way — it was missing from the
+  INV-0001 inventory table.
 - Hooks are decoded but never executed (forge#41) — hook edits here are
   forward-looking, not testable.
 
@@ -191,8 +198,11 @@ go/k8s pinned-defaults pattern: GitHub-pinned scalars, no `git_provider` prompt,
       `renovate_config_prefix` (default `"github"`)
 - [x] All four: add the four Backstage `project_component_*` variables as
       `required = true` (OQ-2b — go/k8s parity, explicit Backstage identity)
-- [ ] All four: `defaults { exclude }` of the root `.forgejo/` relpaths — copy
+- [x] All four: `defaults { exclude }` of the root `.forgejo/` relpaths — copy
       the exact-relpath list from `go/k8s/blueprint.hcl` (no globs)
+- [x] go/ext + go/kubebuilder: declare `go_version` (default `"1.26.4"`) —
+      gap not caught by the INV-0001 inventory; `go/_defaults/CLAUDE.md.tmpl`,
+      `mise.toml.tmpl` and `go.mod.tmpl` all reference it
 - [ ] go/kubebuilder: add `hooks { post_create = ["git init", "go mod tidy"] }`
       (drive-by; it inherits `go/_defaults/go.mod.tmpl` so tidy is applicable)
 

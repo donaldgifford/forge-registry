@@ -94,6 +94,20 @@ variable "renovate_config_prefix" {
   default     = "github"
 }
 
+defaults {
+  exclude = [
+    ".forgejo/PULL_REQUEST_TEMPLATE.yml",
+    ".forgejo/workflows/lint.yml.tmpl",
+    ".forgejo/workflows/labels-sync.yml.tmpl",
+    ".forgejo/ISSUE_TEMPLATE/bug.yml",
+    ".forgejo/ISSUE_TEMPLATE/config.yml",
+    ".forgejo/ISSUE_TEMPLATE/documentation.yml",
+    ".forgejo/ISSUE_TEMPLATE/feature-core.yml",
+    ".forgejo/ISSUE_TEMPLATE/feature-plugin.yml",
+    ".forgejo/ISSUE_TEMPLATE/refactor.yml",
+  ]
+}
+
 hooks {
   post_create = ["git init"]
 }

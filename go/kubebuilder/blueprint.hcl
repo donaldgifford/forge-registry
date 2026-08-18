@@ -46,6 +46,12 @@ variable "license" {
   }
 }
 
+variable "go_version" {
+  description = "Go toolchain version (matches go.mod, mise.toml, Dockerfile)"
+  type        = string
+  default     = "1.26.4"
+}
+
 variable "project_component_type" {
   description = "Backstage Entity Component Type"
   type        = string
@@ -92,4 +98,18 @@ variable "renovate_config_prefix" {
   description = "Renovate `extends:` source prefix"
   type        = string
   default     = "github"
+}
+
+defaults {
+  exclude = [
+    ".forgejo/PULL_REQUEST_TEMPLATE.yml",
+    ".forgejo/workflows/lint.yml.tmpl",
+    ".forgejo/workflows/labels-sync.yml.tmpl",
+    ".forgejo/ISSUE_TEMPLATE/bug.yml",
+    ".forgejo/ISSUE_TEMPLATE/config.yml",
+    ".forgejo/ISSUE_TEMPLATE/documentation.yml",
+    ".forgejo/ISSUE_TEMPLATE/feature-core.yml",
+    ".forgejo/ISSUE_TEMPLATE/feature-plugin.yml",
+    ".forgejo/ISSUE_TEMPLATE/refactor.yml",
+  ]
 }
