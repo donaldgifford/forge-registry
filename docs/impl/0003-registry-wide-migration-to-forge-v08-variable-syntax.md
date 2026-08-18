@@ -142,7 +142,7 @@ Observation 4.
 
 #### Tasks
 
-- [ ] Migrate go/cli: bareword types, `validation` blocks for the two kebab-case
+- [x] Migrate go/cli: bareword types, `validation` blocks for the two kebab-case
       regexes, `contains()` validation replacing the `license` and
       `git_provider` enums, `git_provider` default `"github"`; ternary defaults
       and `condition` blocks untouched; delete the trailing commented-out
