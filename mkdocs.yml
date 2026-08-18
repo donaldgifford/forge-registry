@@ -12,8 +12,10 @@ nav:
         - Overview: impl/README.md
         - 'IMPL-0001: Forge Registry Skills Plugin': impl/0001-forge-registry-skills-plugin.md
         - 'IMPL-0002: go/k8s Blueprint: Templating, Helm Chart, and Registry-Flagged CI': impl/0002-gok8s-blueprint-templating-helm-chart-and-registry-flagged-ci.md
+        - 'IMPL-0003: Registry-wide migration to forge v0.8 variable syntax': impl/0003-registry-wide-migration-to-forge-v08-variable-syntax.md
     - Investigations:
         - Overview: investigation/README.md
+        - 'INV-0001: Migrate remaining blueprints to forge v0.8 variable syntax and types': investigation/0001-migrate-remaining-blueprints-to-forge-v08-variable-syntax-and.md
     - Plans:
         - Overview: plan/README.md
     - RFCs:

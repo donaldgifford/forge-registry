@@ -34,4 +34,5 @@ docz create impl "Your Implementation Title"
 |----|-------|--------|------|--------|------|
 | IMPL-0001 | Forge Registry Skills Plugin | Draft | 2026-04-10 | Donald Gifford | [0001-forge-registry-skills-plugin.md](0001-forge-registry-skills-plugin.md) |
 | IMPL-0002 | go/k8s Blueprint: Templating, Helm Chart, and Registry-Flagged CI | Draft | 2026-08-15 | Donald Gifford | [0002-gok8s-blueprint-templating-helm-chart-and-registry-flagged-ci.md](0002-gok8s-blueprint-templating-helm-chart-and-registry-flagged-ci.md) |
+| IMPL-0003 | Registry-wide migration to forge v0.8 variable syntax | Draft | 2026-08-18 | Donald Gifford | [0003-registry-wide-migration-to-forge-v08-variable-syntax.md](0003-registry-wide-migration-to-forge-v08-variable-syntax.md) |
 <!-- END DOCZ AUTO-GENERATED -->

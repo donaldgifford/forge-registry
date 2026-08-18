@@ -33,6 +33,15 @@ created: 2026-08-15
 - [Testing Strategy](#testing-strategy)
 - [Migration / Rollout Plan](#migration--rollout-plan)
 - [Open Questions](#open-questions)
+  - [1. Blueprint-time flags vs chart-values toggles for monitoring?](#1-blueprint-time-flags-vs-chart-values-toggles-for-monitoring)
+  - [2. Drop repo-guardian's backend templates (valkey/postgres/cnpg/tailscale) entirely?](#2-drop-repo-guardians-backend-templates-valkeypostgrescnpgtailscale-entirely)
+  - [3. Keep the PrometheusRule starter alert pack?](#3-keep-the-prometheusrule-starter-alert-pack)
+  - [4. Makefile in go/k8s?](#4-makefile-in-gok8s)
+  - [5. Where does the ECR operator-prep doc live?](#5-where-does-the-ecr-operator-prep-doc-live)
+  - [6. Keep gh-pages.yml (mkdocs docs site)?](#6-keep-gh-pagesyml-mkdocs-docs-site)
+  - [7. Local kind-based chart install testing (ct install)?](#7-local-kind-based-chart-install-testing-ct-install)
+  - [8. Keep ghcr.yml/ecr.yml as reusable (workflow_call) workflows or inline into release.yml?](#8-keep-ghcrymlecryml-as-reusable-workflowcall-workflows-or-inline-into-releaseyml)
+  - [9. Chart-scoped changelog (chart cliff.toml + CHANGELOG.md)?](#9-chart-scoped-changelog-chart-clifftoml--changelogmd)
 - [References](#references)
 <!--toc:end-->
 
