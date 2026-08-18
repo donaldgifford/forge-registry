@@ -177,6 +177,25 @@ Observation 4.
 - No `.tmpl` file changed; scaffold diffs vs. pre-migration output show only the
   provider-default flip
 
+  Verified by byte-diff. A true pre-migration scaffold is impossible (main's
+  blueprints don't load on forge 0.8 — that's the bug), so the baseline is
+  main's blueprints with **only** the mechanical syntax swap applied: old
+  `forgejo` default kept, std/docs' two conditions left unmerged. Scaffolding
+  baseline and migrated with the same explicit `--set git_provider=...`
+  neutralizes the default flip, isolating any other behavior change:
+
+  | Blueprint   | `git_provider=github` | `git_provider=forgejo` |
+  | ----------- | --------------------- | ---------------------- |
+  | go/cli      | identical             | identical              |
+  | std/docs    | identical             | identical              |
+  | bun/std     | identical             | identical              |
+  | homelab/k8s | identical             | identical              |
+
+  (`.forge-lock.hcl` excluded — it records the registry path and commit.) The
+  std/docs rows are the load-bearing ones: they prove merging its two duplicate
+  `git_provider != "github"` condition blocks into one exclude list changed no
+  output on either path.
+
 ---
 
 ### Phase 2: Surface reconciliation — go/ext, go/kubebuilder, rust/std, rust/esp32
