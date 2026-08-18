@@ -225,14 +225,14 @@ registry's scalar conventions, and give it the same pinned surface as Phase 2.
 
 #### Tasks
 
-- [ ] Syntax swap on `project_name` / `project_owner` / `project_description`
-- [ ] Delete `backstage_tags` (`type = "map"`, required, zero template
+- [x] Syntax swap on `project_name` / `project_owner` / `project_description`
+- [x] Delete `backstage_tags` (`type = "map"`, required, zero template
       consumers)
-- [ ] Add `license` (string, `contains()` validation, default `"Apache-2.0"`) —
+- [x] Add `license` (string, `contains()` validation, default `"Apache-2.0"`) —
       inherited `README.md.tmpl` renders `${license}`
-- [ ] Add the four `project_component_*` variables (`required = true`, same
+- [x] Add the four `project_component_*` variables (`required = true`, same
       shape as Phase 2)
-- [ ] Add pinned provider scalars + `.forgejo/` defaults-exclude (same shape as
+- [x] Add pinned provider scalars + `.forgejo/` defaults-exclude (same shape as
       Phase 2)
 
 #### Success Criteria
