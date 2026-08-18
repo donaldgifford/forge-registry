@@ -235,6 +235,13 @@ go/k8s pinned-defaults pattern: GitHub-pinned scalars, no `git_provider` prompt,
 - Interactive prompt surface is exactly the project vars plus the four required
   component vars (OQ-2b); no provider prompts
 
+  Verified with `forge info <bp>/blueprint.hcl -o json` (prompting can't be
+  driven from a non-TTY — forge errors on the first required variable instead).
+  All five reconciled blueprints report the same surface: seven required
+  variables (`project_name`, `project_owner`, `project_description` + the four
+  `project_component_*`), with `license`, `go_version` and the three provider
+  scalars defaulted, and **no `git_provider` variable declared**.
+
 ---
 
 ### Phase 3: go/std rebuild
@@ -293,6 +300,15 @@ the old syntax as the convention.
 - `yamllint`, `markdownlint-cli2`, and `prettier --check` pass on everything
   touched
 - No doc in the repo shows the removed v0.6 forms as current convention
+
+  Audited by grepping `docs/` and root markdown for `type = "choice"`,
+  `choices =` and `validate = "`. Most hits describe the removal (IMPL-0002,
+  DESIGN-0004, CLAUDE.md) and are correct as written. Two **Draft** design docs
+  — DESIGN-0002 and DESIGN-0003 — showed legacy `blueprint.hcl` snippets as the
+  shape to build, which would have led an implementer to write syntax that no
+  longer loads. Both now carry a syntax note pointing at IMPL-0003 and
+  CLAUDE.md; their design intent is untouched, since rewriting proposals is out
+  of scope for this migration.
 
 ---
 
