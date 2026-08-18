@@ -149,7 +149,7 @@ Observation 4.
       `backstage_tags` block
 - [x] Propagate the migrated body to go/docker and std/new (preserve each file's
       `name`/`description`/`tags` header)
-- [ ] Migrate bun/std (same shape; `bun_version`/`node_version` in place of
+- [x] Migrate bun/std (same shape; `bun_version`/`node_version` in place of
       `go_version`)
 - [ ] Migrate std/docs; merge its two `git_provider != "github"` conditions into
       one exclude list; drop the commented-out hooks blocks (hooks don't execute
