@@ -46,7 +46,7 @@ blueprint "std/new" {
   description   = "Generic std blueprint with multi-provider (github / forgejo) support"
   version       = "0.3.1"
   tags          = ["std", "new"]
-  latest_commit = "0f119a31d5e3cf629fd3c9d05e4ca9b733043175"
+  latest_commit = "e8e0f56ef26e6c8b3dbe216d96f07bf2e0442e3f"
 }
 
 blueprint "homelab/k8s" {
