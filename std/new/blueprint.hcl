@@ -1,6 +1,6 @@
 name        = "std-new"
 description = "Generic std blueprint with multi-provider (github / forgejo) support"
-version     = "0.3.0"
+version     = "0.3.1"
 tags        = ["std", "new"]
 
 # forge v0.8 variable syntax (IMPL-0003): bareword types + `validation`
