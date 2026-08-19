@@ -10,6 +10,10 @@ this project adheres to [Semantic Versioning](https://semver.org/).
 
 - *(impl-0003)* Mark Completed; refresh pins after the pass-2 squash merge ([#21](https://github.com/donaldgifford/forge-registry/issues/21))
 
+### Miscellaneous Tasks
+
+- Cleanup
+
 ## [0.1.0] - 2026-08-19
 
 ### Features
