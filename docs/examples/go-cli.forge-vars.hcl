@@ -11,9 +11,10 @@
 # ignored. `--var-file` is mutually exclusive with `--set`.
 #
 # go/cli is the reference for the *cluster* surface — the 13 blueprints
-# that prompt for `git_provider` and derive project_org / git_host /
-# renovate_config_prefix from it. go/std, go/ext, go/kubebuilder and
-# the rust blueprints are GitHub-pinned instead (no git_provider key).
+# that ship both a .github/ and a .forgejo/ tree and pick between them
+# on `git_provider.name`. go/std, go/ext, go/kubebuilder, go/k8s and the
+# rust blueprints declare the same object but are GitHub-pinned: they
+# carry no .forgejo/ tree, so only the derived attributes matter there.
 
 # ─── Required ────────────────────────────────────────────────────────
 
@@ -32,21 +33,30 @@ project_component_owner     = "platform-team"
 
 # ─── Optional (blueprint defaults shown) ─────────────────────────────
 
-# Constrained by `contains(["forgejo", "github"], ...)`. Defaults to
-# github; switching to forgejo swaps the .github/ tree for .forgejo/
-# and re-derives the three variables below.
-git_provider = "github"
+# Provider identity and everything derived from it (issue #14) — one
+# object variable, replacing the former git_provider enum plus the
+# project_org / git_host / renovate_config_prefix scalars it drove.
+#
+# `name` is constrained by `contains(["forgejo", "github"], ...)` and
+# selects which tree ships: github keeps .github/ and drops .forgejo/,
+# forgejo does the reverse.
+#
+# Objects replace wholesale — all four attributes are required whenever
+# the key is present, because forge has no `optional()` for exact object
+# types. Omit the key entirely to take the blueprint default (the values
+# shown here).
+#
+# For the forgejo variant, compose docs/examples/forgejo.forge-vars.hcl
+# on top of this file rather than editing it.
+git_provider = {
+  name                   = "github"
+  org                    = "donaldgifford"
+  host                   = "github.com"
+  renovate_config_prefix = "github"
+}
 
 # Constrained by `contains(["MIT", "Apache-2.0", "BSD-3-Clause",
 # "none"], ...)`.
 license = "Apache-2.0"
 
 go_version = "1.26.4"
-
-# Derived from git_provider when omitted — set them only to override:
-#   github  -> donaldgifford / github.com     / github
-#   forgejo -> homelab       / git.fartlab.dev / git.fartlab.dev
-#
-# project_org            = "donaldgifford"
-# git_host               = "github.com"
-# renovate_config_prefix = "github"

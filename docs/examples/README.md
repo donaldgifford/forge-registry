@@ -6,10 +6,12 @@ repo).
 
 ## Files
 
-| File                        | Purpose                                          |
-| --------------------------- | ------------------------------------------------ |
-| `go-k8s.forge-vars.hcl`     | Full go/k8s example — every variable, GHCR train |
-| `go-k8s-ecr.forge-vars.hcl` | Overlay flipping the release train to ECR        |
+| File                        | Purpose                                                |
+| --------------------------- | ------------------------------------------------------ |
+| `go-k8s.forge-vars.hcl`     | Full go/k8s example — every variable, GHCR train       |
+| `go-k8s-ecr.forge-vars.hcl` | Overlay flipping the release train to ECR              |
+| `go-cli.forge-vars.hcl`     | Full go/cli example — the multi-provider surface       |
+| `forgejo.forge-vars.hcl`    | Overlay retargeting any blueprint at `git.fartlab.dev` |
 
 ## Usage
 
@@ -39,9 +41,10 @@ Vars files are **attribute-only HCL** with strict literal values:
 - The `.hcl` extension is required.
 - Top-level blocks are rejected — assignments only.
 - No functions, no references, no traversals: values are evaluated in an empty
-  context, so `project_org = project_owner` or `upper("x")` are load errors.
-  Cross-variable defaults (e.g. go/k8s's `project_org` defaulting to
-  `project_owner`) live in the blueprint — omit the key to get them.
+  context, so `project_description = project_name` or `upper("x")` are load
+  errors. Cross-variable defaults (e.g. the GitHub-pinned blueprints defaulting
+  `git_provider.org` to `project_owner`) live in the blueprint — omit the key to
+  get them.
 - Keys that don't match a declared blueprint variable are warned about and
   ignored.
 - `--var-file` is mutually exclusive with `--set`.
@@ -57,26 +60,45 @@ enable_monitoring = false          # bool — bare, not "false"
 ## Structured types (forge v0.8 / IMPL-0009)
 
 forge v0.8 blueprints can declare `object({...})`, `list(...)`, and `map(...)`
-variables — and vars files are the only full channel for supplying them: `--set`
-rejects `list`/`map` variables outright ("use --var-file to supply list and map
-values"), accepts objects only as a quoted HCL-literal string, and interactive
-prompting is scalar-only. Vars files take all three as plain HCL literals:
+variables, and vars files take all three as plain HCL literals. `--set` accepts
+an object only as a quoted HCL-literal string and rejects `list`/`map` outright
+("use --var-file to supply list and map values"); interactive prompting unfolds
+an object one field at a time. So vars files are the only ergonomic channel for
+structured values.
+
+Every blueprint declares exactly one object variable today: `git_provider`,
+carrying the provider identity and the three values derived from it — see
+[forge-registry#14](https://github.com/donaldgifford/forge-registry/issues/14)
+and IMPL-0003 Phase 7.
 
 ```hcl
-# Hypothetical — no registry blueprint declares these yet. Issue #14
-# plans to collapse the git-provider scalar cluster into an object
-# variable registry-wide, at which point a vars file would set it as:
 git_provider = {
-  host   = "github.com"
-  org    = "donaldgifford"
-  prefix = "github"
+  name                   = "github"
+  org                    = "donaldgifford"
+  host                   = "github.com"
+  renovate_config_prefix = "github"
 }
-
-extra_topics = ["go", "kubernetes", "helm"]
 ```
 
-Until that migration lands (IMPL-0003 Phases 6–8), the registry's blueprints use
-`string` and `bool` variables only — see the example files for the real surface.
+**Objects replace wholesale.** All four attributes are required whenever the key
+is present — forge has no `optional()` for exact object types, so a partial
+object fails before anything is written:
+
+```console
+Error: loading vars file: vars file partial.hcl:1,16: variable "git_provider"
+expects object, got object: attributes "host", "org", and
+"renovate_config_prefix" are required
+```
+
+Omit the key entirely to take the blueprint default. That is also why there is
+no `--set git_provider=forgejo` shorthand any more: use the
+`forgejo.forge-vars.hcl` overlay, or pass the whole object as a `--set` HCL
+literal.
+
+`--set` accepts an object as a quoted HCL literal but rejects `list`/`map`
+variables outright ("use --var-file to supply list and map values"), and
+interactive prompting unfolds an object one field at a time. Vars files take all
+three as plain HCL literals.
 
 ## Value constraints
 
@@ -87,11 +109,12 @@ blueprint's own error message and the offending declaration's position:
 
 ```console
 $ forge create go/cli --registry-dir . --output-dir demo \
-    --set git_provider=gitlab ...
-Error: validating variables: git_provider must be one of: forgejo, github.
-  (variable "git_provider", go/cli/blueprint.hcl:44,3-13)
+    --var-file docs/examples/go-cli.forge-vars.hcl --var-file gitlab.hcl
+Error: validating variables: git_provider.name must be one of: forgejo, github.
+  (variable "git_provider", go/cli/blueprint.hcl:58,3-13)
 ```
 
-The same applies to `license` and, for go/k8s, `container_registry`. Variables
-constrained this way are listed with their allowed values in each blueprint's
-`blueprint.hcl`.
+Object attributes validate the same way, and the check fires identically whether
+the value arrived through `--set` or a vars file. The same applies to `license`
+and, for go/k8s, `container_registry`. Variables constrained this way are listed
+with their allowed values in each blueprint's `blueprint.hcl`.
