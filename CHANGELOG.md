@@ -12,7 +12,7 @@ this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Miscellaneous Tasks
 
-- Cleanup
+- Cleanup ([#22](https://github.com/donaldgifford/forge-registry/issues/22))
 
 ## [0.1.0] - 2026-08-19
 
