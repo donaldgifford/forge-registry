@@ -4,7 +4,7 @@ All notable changes to this project are documented here. The format is
 based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and
 this project adheres to [Semantic Versioning](https://semver.org/).
 
-## [unreleased]
+## [0.1.0] - 2026-08-19
 
 ### Features
 
@@ -19,7 +19,7 @@ this project adheres to [Semantic Versioning](https://semver.org/).
 - *(homelab)* Add homelab/go blueprint + flatten ${project_name}/ wrapper across registry ([#11](https://github.com/donaldgifford/forge-registry/issues/11))
 - *(go)* Add go/k8s blueprint — Helm chart, k3d loop, registry-flagged release trains ([#15](https://github.com/donaldgifford/forge-registry/issues/15))
 - Migrate all blueprints to forge v0.8 variable syntax (pass 1) ([#19](https://github.com/donaldgifford/forge-registry/issues/19))
-- [**breaking**] Collapse the git-provider scalar cluster into one object variable
+- [**breaking**] Collapse the git-provider scalar cluster into one object variable (pass 2) ([#20](https://github.com/donaldgifford/forge-registry/issues/20))
 
 ### Bug Fixes
 
@@ -37,22 +37,9 @@ this project adheres to [Semantic Versioning](https://semver.org/).
 
 - Add design doc and update docz indexes
 - INV-0001 + IMPL-0003 — plan the registry-wide forge v0.8 migration ([#18](https://github.com/donaldgifford/forge-registry/issues/18))
-- *(examples)* Move var-files to the git_provider object + add forgejo overlay
-- Record the object migration in IMPL-0003 and CLAUDE.md
-- *(impl-0003)* Check off pass-1 merge and the pass-2 PR
-- *(impl-0003)* Move to In Progress and sync the docz index
-
-### Testing
-
-- *(smoke)* Add object-supply and negative passes to scaffold-smoke.sh
 
 ### Miscellaneous Tasks
 
 - Cleanup ([#13](https://github.com/donaldgifford/forge-registry/issues/13))
 - *(docs)* Add examples/ with forge-vars.hcl var-file examples; refresh root README ([#16](https://github.com/donaldgifford/forge-registry/issues/16))
-- *(blueprints)* Bump all 19 to 0.3.0 for the object migration
-- *(registry)* Sync registry.hcl to the 0.3.0 object migration
-- *(registry)* Refresh latest_commit pins after rebase onto main
-- Keep the donald-loop iteration counter out of the PR diff
-- *(mise)* Require forge 0.8.1 — the object var-file floor
 
