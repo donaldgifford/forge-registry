@@ -14,9 +14,9 @@ fmt:
     yamlfmt .
     prettier --write '**/*.md'
 
-# Sync labels to ${git_host} via gitea-label-sync
+# Sync labels to ${git_provider.host} via gitea-label-sync
 labels-sync:
-    # TODO: wire up — see https://${git_host}/homelab/homelab-tools for tool path
+    # TODO: wire up — see https://${git_provider.host}/homelab/homelab-tools for tool path
     @echo "TODO: gitea-label-sync --config labels.yaml"
 
 # TODO: add repo-type-specific recipes (deploy / build / publish / etc.)

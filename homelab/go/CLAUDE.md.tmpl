@@ -1,8 +1,8 @@
 # CLAUDE.md
 
-Per-repo orientation for `${project_org}/${project_name}`. This file is a
+Per-repo orientation for `${git_provider.org}/${project_name}`. This file is a
 Go-shaped overlay on top of the universal homelab `CLAUDE.md` (see
-[homelab/docs](https://${git_host}/${project_org}/docs)); the universals
+[homelab/docs](https://${git_provider.host}/${git_provider.org}/docs)); the universals
 apply here too — only Go-specific guidance is captured below.
 
 ## What this is
@@ -13,7 +13,7 @@ apply here too — only Go-specific guidance is captured below.
   `internal/` (private to the module).
 - Built into a distroless container via `Dockerfile`; released as
   multi-arch (linux+darwin × amd64+arm64) archives via `goreleaser`.
-- Lives on Forgejo (`${git_host}/${project_org}/${project_name}`); a
+- Lives on Forgejo (`${git_provider.host}/${git_provider.org}/${project_name}`); a
   `.github/workflows/` mirror exists so the repo can also build on
   GitHub once it's mirrored.
 
@@ -121,4 +121,4 @@ the cache layers.
 - `go.mod` updates are PR'd by Renovate's Go module manager.
 - Container base images in `Dockerfile` are PR'd by the Docker manager.
 - `mise.toml` versions are handled by a custom regex manager configured
-  upstream in `${project_org}/renovate-config`.
+  upstream in `${git_provider.org}/renovate-config`.

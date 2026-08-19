@@ -12,7 +12,7 @@ blueprint definitions.
 
 ## Architecture
 
-```
+```text
 _defaults/              # Registry-wide defaults (shared across all categories)
 ├── .gitignore, .markdownlint.yaml, .prettierrc.yaml, etc.
 go/                     # Go blueprints
@@ -32,12 +32,12 @@ index is `registry.hcl` at the repo root.
 
 ## Key Conventions
 
-- **Blueprint variables** are defined in `blueprint.hcl` as `variable "name"
-  { type = string, description = …, default = …, required = … }` blocks.
-  Types are **barewords** (`string`, `bool`, `number`, `object({…})`,
+- **Blueprint variables** are defined in `blueprint.hcl` as
+  `variable "name" { type = string, description = …, default = …, required = … }`
+  blocks. Types are **barewords** (`string`, `bool`, `number`, `object({…})`,
   `list(T)`, `map(T)`) — quoted type tags and the legacy `type = "choice"` /
-  `choices` / `validate = "<regex>"` forms were removed in forge v0.7 and
-  are load errors from v0.8 on. Constrain values with `validation` blocks:
+  `choices` / `validate = "<regex>"` forms were removed in forge v0.7 and are
+  load errors from v0.8 on. Constrain values with `validation` blocks:
 
   ```hcl
   variable "license" {
@@ -52,8 +52,18 @@ index is `registry.hcl` at the repo root.
   }
   ```
 
-  Conditions reference variables bare (`when = git_provider != "github"`),
+  Conditions reference variables bare (`when = git_provider.name != "github"`),
   while `validation` conditions use the `var.` namespace.
+
+- **`git_provider` is an object**, declared identically in all 19 blueprints:
+  `object({ name, org, host, renovate_config_prefix })`. Templates traverse it
+  (`${git_provider.org}`), conditions test `git_provider.name`, and validations
+  use `var.git_provider.name`. Objects **replace wholesale** — forge has no
+  `optional()` for exact object types, so supplying the key at all means
+  supplying all four attributes. Omit it to take the blueprint default; use
+  `docs/examples/forgejo.forge-vars.hcl` to retarget at forgejo. An object
+  `default` may reference earlier variables (`org = project_owner`), which the
+  GitHub-pinned blueprints rely on.
 - **Template files** use `.tmpl` extension and HCL2 syntax. Files without
   `.tmpl` are copied verbatim and never parsed by the engine.
 - **`_defaults/` directories** provide inherited files — category-level defaults
@@ -63,9 +73,9 @@ index is `registry.hcl` at the repo root.
   name itself uses `${project_name}` syntax, not `{{project_name}}`.
 - **Escape `${...}` for downstream tools** — goreleaser, Docker buildx ARGs,
   shell parameter expansion, GitHub Actions expressions all use `${name}` as
-  their own substitution syntax. Write `$${name}` in templates so HCL2 emits
-  a literal `${name}` for the downstream consumer. Forge variables use
-  bare `${name}`.
+  their own substitution syntax. Write `$${name}` in templates so HCL2 emits a
+  literal `${name}` for the downstream consumer. Forge variables use bare
+  `${name}`.
 - YAML files require document start marker (`---`) per yamllint config.
 - YAML indentation: 2 spaces.
 - Markdown prose wrapped at 80 characters (prettier).
@@ -84,8 +94,8 @@ This repo has no build step or tests. Quality is enforced via config linters:
 forge registry blueprint <category>/<name> --registry-dir .
 ```
 
-Then define variables in `blueprint.hcl`, add template files (using HCL2
-syntax with `.tmpl` extension), and leverage `_defaults/` for shared config.
+Then define variables in `blueprint.hcl`, add template files (using HCL2 syntax
+with `.tmpl` extension), and leverage `_defaults/` for shared config.
 `forge registry update --registry-dir .` keeps `registry.hcl` in sync after
 edits.
 
@@ -94,13 +104,13 @@ edits.
 This repo includes Claude Code skills in `.claude/skills/` for registry
 management:
 
-| Slash Command | Description |
-|---------------|-------------|
-| `/forge-registry` | General registry knowledge and quick reference |
-| `/registry-list` | List all blueprints with metadata table |
-| `/registry-validate` | Validate registry structure and blueprint schemas |
-| `/blueprint-scaffold` | Create new categories or blueprints via `forge registry blueprint` |
-| `/blueprint-update` | Modify blueprint.hcl fields (variables, hooks, sync) |
-| `/blueprint-add-template` | Add .tmpl files with variable cross-referencing |
-| `/blueprint-bump-version` | Semver version bumps (single or batch) |
-| `/registry-review` | Review blueprint changes against conventions |
+| Slash Command             | Description                                                        |
+| ------------------------- | ------------------------------------------------------------------ |
+| `/forge-registry`         | General registry knowledge and quick reference                     |
+| `/registry-list`          | List all blueprints with metadata table                            |
+| `/registry-validate`      | Validate registry structure and blueprint schemas                  |
+| `/blueprint-scaffold`     | Create new categories or blueprints via `forge registry blueprint` |
+| `/blueprint-update`       | Modify blueprint.hcl fields (variables, hooks, sync)               |
+| `/blueprint-add-template` | Add .tmpl files with variable cross-referencing                    |
+| `/blueprint-bump-version` | Semver version bumps (single or batch)                             |
+| `/registry-review`        | Review blueprint changes against conventions                       |

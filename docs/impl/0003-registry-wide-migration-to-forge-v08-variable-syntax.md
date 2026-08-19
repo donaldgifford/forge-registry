@@ -1,7 +1,7 @@
 ---
 id: IMPL-0003
 title: "Registry-wide migration to forge v0.8 variable syntax"
-status: Draft
+status: In Progress
 author: Donald Gifford
 created: 2026-08-18
 ---
@@ -10,7 +10,7 @@ created: 2026-08-18
 
 # IMPL 0003: Registry-wide migration to forge v0.8 variable syntax
 
-**Status:** Draft **Author:** Donald Gifford **Date:** 2026-08-18
+**Status:** In Progress **Author:** Donald Gifford **Date:** 2026-08-18
 
 <!--toc:start-->
 
@@ -37,9 +37,11 @@ created: 2026-08-18
     - [Success Criteria](#success-criteria-4)
   - [Phase 6: Pass-2 semantics validation (scratch)](#phase-6-pass-2-semantics-validation-scratch)
     - [Tasks](#tasks-5)
+    - [Findings](#findings)
     - [Success Criteria](#success-criteria-5)
   - [Phase 7: Pass-2 object migration (all 19 blueprints + shared templates)](#phase-7-pass-2-object-migration-all-19-blueprints--shared-templates)
     - [Tasks](#tasks-6)
+    - [Findings](#findings-1)
     - [Success Criteria](#success-criteria-6)
   - [Phase 8: Pass-2 verification and landing](#phase-8-pass-2-verification-and-landing)
     - [Tasks](#tasks-7)
@@ -331,7 +333,8 @@ Prove every blueprint scaffolds, then ship the single PR.
 - [x] Commit (drive-bys called out in the message), push, open the single
       registry-wide PR referencing INV-0001 + this doc, with issue #14 linked as
       pass 2 (Phases 6–8)
-- [ ] After merge: check off pass 1 here and start Phase 6
+- [x] After merge: check off pass 1 here and start Phase 6 — #19 merged as
+      `9ddae0a` on 2026-08-19
 
 #### Success Criteria
 
@@ -414,9 +417,11 @@ template files** (`project_org` 103/32, `git_host` 38/27,
       assumed
 - [x] Final object shape and the complete template-reference inventory are
       posted to issue #14
-- [ ] The forgejo overlay renders correctly in the scratch registry — **not
-      met**: blocked by forge#42. Phase 7 is gated on that fix (see
-      Dependencies).
+- [x] The forgejo overlay renders correctly — met in Phase 7 rather than in the
+      scratch registry: `docs/examples/forgejo.forge-vars.hcl` composes onto any
+      base example and renders the `.forgejo/` tree with fartlab-derived values.
+      Requires forge v0.8.1 (forge#43); on 0.8.0 this fails with
+      `object required, but have string`.
 
 ---
 
@@ -424,26 +429,57 @@ template files** (`project_org` 103/32, `git_host` 38/27,
 
 #### Tasks
 
-- [ ] Replace the scalar cluster (`git_provider` enum + three ternary scalars)
+- [x] Replace the scalar cluster (`git_provider` enum + three ternary scalars)
       with the object variable in the 13 cluster blueprints
-- [ ] Convert the six pinned-scalar blueprints (go/k8s + the five reconciled in
+- [x] Convert the six pinned-scalar blueprints (go/k8s + the five reconciled in
       pass 1) to the same object with a full GitHub default (their prompt
       surface must not change)
-- [ ] Rewrite template references to attribute access (`${git_provider.org}`,
+- [x] Rewrite template references to attribute access (`${git_provider.org}`,
       `${git_provider.host}`, `${git_provider.renovate_config_prefix}`) across
       every `_defaults/` level and blueprint template from the Phase 6 inventory
-- [ ] Conditions: `git_provider != "github"` → `git_provider.name != "github"`
-- [ ] Update `docs/examples/` var-files to object literals (the README already
+- [x] Conditions: `git_provider != "github"` → `git_provider.name != "github"`
+- [x] Update `docs/examples/` var-files to object literals (the README already
       previews the shape) and add the forgejo overlay
-- [ ] Bump migrated blueprints 0.2.0 → 0.3.0; `forge registry update`
+- [x] Bump migrated blueprints 0.2.0 → 0.3.0; `forge registry update`
+
+#### Findings
+
+Done on branch `feat/v08-object-consolidation`, verified against a build of
+**forge#43** (the fix for the Phase 6 blocker). Stock forge 0.8.0 still cannot
+read the object from a var-file, so this work cannot land before that fix is
+released — see Dependencies.
+
+Scope came in at **170 references across 39 template files**, marginally above
+the Phase 6 estimate of 169/40. No `$${...}` escapes and no bare directive
+references existed for any of the three scalars, so the rewrite was unambiguous.
+
+Behavior preservation is proven by byte-diff, not asserted:
+
+- **github path** — all 19 blueprints produce output byte-identical to their
+  pass-1 scaffold (`.forge-lock.hcl` excluded, since it records the registry
+  path).
+- **forgejo path** — all 13 cluster blueprints are byte-identical to their
+  pass-1 `--set git_provider=forgejo` scaffold when the object is supplied in
+  full.
+
+Two behaviors were deliberately preserved rather than tidied:
+
+- The cluster blueprints default `git_provider.org` to the literal
+  `"donaldgifford"`, while the six pinned ones default it to `project_owner` —
+  exactly what the scalars they replace did. Unifying them would change emitted
+  output and belongs in its own change.
+- `go/k8s/go.mod.tmpl` interpolates `project_owner`, not the provider org, so a
+  forgejo-targeted go/k8s emits `git.fartlab.dev/<project_owner>/...`. This
+  predates the migration; the byte-diff confirms it is unchanged.
 
 #### Success Criteria
 
-- All 19 blueprints scaffold on the object default; the forgejo overlay var-file
-  renders the `.forgejo/` tree and fartlab-derived values
-- No template in the repo references the removed scalar names
-- `--set` / var-file supply of a bad `git_provider.name` fails with the
-  `contains()` validation error
+- [x] All 19 blueprints scaffold on the object default; the forgejo overlay
+      var-file renders the `.forgejo/` tree and fartlab-derived values (40 → 34
+      files for go/cli, `module git.fartlab.dev/homelab/release-tool`)
+- [x] No template in the repo references the removed scalar names
+- [x] `--set` / var-file supply of a bad `git_provider.name` fails with the
+      `contains()` validation error, on both channels, with position
 
 ---
 
@@ -451,20 +487,24 @@ template files** (`project_org` 103/32, `git_host` 38/27,
 
 #### Tasks
 
-- [ ] Update `scripts/scaffold-smoke.sh` for object supply and run it green
+- [x] Update `scripts/scaffold-smoke.sh` for object supply and run it green
       19/19
-- [ ] Negative matrix: bad `git_provider.name` via `--set` object literal and
+- [x] Negative matrix: bad `git_provider.name` via `--set` object literal and
       via var-file
-- [ ] Repo linters clean (yamllint / markdownlint-cli2 / prettier)
-- [ ] Commit, push, open the pass-2 PR referencing this doc, wired to close
-      issue #14 on merge
+- [x] Repo linters clean (yamllint / markdownlint-cli2 / prettier)
+- [x] Commit, push, open the pass-2 PR referencing this doc, wired to close
+      issue #14 on merge — PR #20, now ready for review; forge v0.8.1 shipped
+      the fix it was gated on
 - [ ] After merge: mark this doc Completed
 
 #### Success Criteria
 
-- 19/19 scaffolds green with zero `forge registry update` warnings
-- Pass-2 PR is open and linked to close issue #14
-- Every checkbox in this doc is ticked
+- [x] 19/19 scaffolds green with zero `forge registry update` warnings — the
+      harness now runs 36 checks (19 default + 13 object-supply + 4 negative)
+      and exits 0; `forge registry update` reports all blueprints up to date
+- [x] Pass-2 PR is open and linked to close issue #14 — PR #20, all four checks
+      green, mergeable, and no longer blocked: forge v0.8.1 ships the fix
+- [ ] Every checkbox in this doc is ticked
 
 ---
 
@@ -595,8 +635,19 @@ after pass 1 merges.
   depends on that working, since several `_defaults` templates compose provider
   attributes into other variables' defaults.
 
-  Phase 7 unblocks once forge#43 merges and lands in a released forge that
-  `forge version` reports.
+  **Both gates cleared on 2026-08-19.** Pass 1 merged as `9ddae0a`, and forge#43
+  merged as `d207c77` and shipped in **forge v0.8.1**. `mise.toml` now pins
+  `github:donaldgifford/forge = "0.8.1"`, which is the registry's new floor: the
+  object surface loads on 0.8.0, but supplying `git_provider` through a var-file
+  does not work there, so 0.8.0 cannot switch providers.
+
+  Re-verified against the released 0.8.1 binary (not a local build): the smoke
+  harness is 36/36 green, including `bad git_provider.name via --var-file`,
+  which is precisely the check that fails on 0.8.0. The forgejo overlay renders
+  end to end — `module git.fartlab.dev/homelab/release-tool` with the
+  `.forgejo/` tree, against `github.com/donaldgifford/release-tool` and
+  `.github/` for the base file. `forge registry update` reports all blueprints
+  up to date.
 
 ## References
 
@@ -605,8 +656,8 @@ after pass 1 merges.
 - forge `docs/MIGRATION.md` — "Variable type system upgrade (v0.7+)"
 - forge-registry issue #14 — pass 2 (`git_provider` object)
 - forge#41 — RunPostCreate hooks never invoked
-- forge#42 — var-files cannot supply object/list/map variables (blocks Phase 7;
-  filed from Phase 6 findings); fix open as forge#43
+- forge#42 — var-files cannot supply object/list/map variables (blocked Phase 7;
+  filed from Phase 6 findings); fixed by forge#43, shipped in forge v0.8.1
 - `go/k8s/blueprint.hcl` — reference v0.8 blueprint (pinned-defaults +
   `defaults { exclude }` pattern)
 - DESIGN-0004 / IMPL-0002 — where the go/k8s pattern was established

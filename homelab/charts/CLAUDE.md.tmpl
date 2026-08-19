@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-Per-repo orientation for `${project_org}/${project_name}` — Helm charts
+Per-repo orientation for `${git_provider.org}/${project_name}` — Helm charts
 published as OCI artifacts to Harbor and Forgejo Packages.
 
 ## Homelab universals
@@ -49,7 +49,7 @@ Charts publish on push to `main` via `.forgejo/workflows/chart-publish.yml`:
    - **Primary**: `oci://harbor.fartlab.dev/charts/<name>` (Harbor in
      the homelab cluster).
    - **Secondary**: Forgejo Packages
-     (`oci://${git_host}/${project_org}/charts/<name>`).
+     (`oci://${git_provider.host}/${git_provider.org}/charts/<name>`).
 4. GHCR push only for charts explicitly flagged public-safe (separate
    workflow).
 
@@ -67,12 +67,12 @@ helmCharts:
 ## Known issues
 
 - **Kustomize `--enable-helm` writes a `charts/` cache next to
-  `kustomization.yaml`** in consumer repos. `${project_org}/k8s`'s
+  `kustomization.yaml`** in consumer repos. `${git_provider.org}/k8s`'s
   `.gitignore` covers this; no action needed in this repo.
 
 ## See also
 
-- `${project_org}/k8s` — consumes these charts via `helmCharts` blocks
+- `${git_provider.org}/k8s` — consumes these charts via `helmCharts` blocks
   in kustomize. Add an example values overlay there when publishing a
   new chart.
 - Harbor: `harbor.fartlab.dev` — OCI registry, also hosts Renovate

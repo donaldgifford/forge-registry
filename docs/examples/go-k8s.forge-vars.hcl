@@ -43,10 +43,21 @@ enable_monitoring = true
 # Ship helm-docs README.md.gotmpl + the docs generation recipe.
 enable_helm_docs = true
 
-# Org/user owning the repo. When omitted, the blueprint defaults this
-# to project_owner — a vars file cannot express that itself (no
-# references allowed), so either omit the key or set it literally.
-project_org = "donaldgifford"
-
-git_host               = "github.com"
-renovate_config_prefix = "github"
+# Provider identity, and everything derived from it (issue #14). This
+# object replaces the former project_org / git_host /
+# renovate_config_prefix scalars.
+#
+# Objects replace wholesale — all four attributes are required whenever
+# the key is present, because forge has no `optional()` for exact object
+# types. Omit the key entirely to take the blueprint default, which
+# points `org` at project_owner (a vars file cannot express that itself:
+# no references allowed).
+#
+# To target forgejo, compose docs/examples/forgejo.forge-vars.hcl on top
+# of this file rather than editing it.
+git_provider = {
+  name                   = "github"
+  org                    = "donaldgifford"
+  host                   = "github.com"
+  renovate_config_prefix = "github"
+}

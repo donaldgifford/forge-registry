@@ -1,6 +1,6 @@
 name        = "go-k8s"
 description = "Go service with container image + Helm chart, registry-flagged CI (GHCR/ECR)"
-version     = "0.2.0"
+version     = "0.3.0"
 tags        = ["go", "k8s", "helm", "docker"]
 
 # forge v0.8 variable syntax (IMPL-0009): bareword types + `validation`
@@ -81,22 +81,30 @@ variable "enable_helm_docs" {
 # GitHub-only, so there is no git_provider prompt — the derived vars
 # are pinned to GitHub defaults (IMPL-0002 OQ-2).
 
-variable "project_org" {
-  description = "Org/user owning the repo"
-  type        = string
-  default     = "${project_owner}"
-}
+# Provider identity, pinned to GitHub (issue #14). These blueprints have
+# no forgejo path — the `.forgejo/` tree is dropped in `defaults
+# { exclude }` — so the object exists to keep the template surface
+# uniform with the multi-provider blueprints. `org` still tracks
+# `project_owner`, as the scalar it replaces did.
+variable "git_provider" {
+  description = "Git provider this repo lives on, and the values derived from it"
+  type = object({
+    name                   = string
+    org                    = string
+    host                   = string
+    renovate_config_prefix = string
+  })
+  default = {
+    name                   = "github"
+    org                    = project_owner
+    host                   = "github.com"
+    renovate_config_prefix = "github"
+  }
 
-variable "git_host" {
-  description = "Hostname of the git provider"
-  type        = string
-  default     = "github.com"
-}
-
-variable "renovate_config_prefix" {
-  description = "Renovate `extends:` source prefix"
-  type        = string
-  default     = "github"
+  validation {
+    condition     = contains(["forgejo", "github"], var.git_provider.name)
+    error_message = "git_provider.name must be one of: forgejo, github."
+  }
 }
 
 variable "project_component_type" {

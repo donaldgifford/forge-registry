@@ -1,6 +1,6 @@
 name        = "rust-std"
 description = "Rust Standard Repo"
-version     = "0.2.0"
+version     = "0.3.0"
 tags        = ["rust", "std"]
 
 # forge v0.8 variable syntax (IMPL-0003): bareword types + `validation`
@@ -76,22 +76,30 @@ variable "project_component_owner" {
 # declared with GitHub defaults (same pattern as go/k8s, IMPL-0003
 # OQ-3a). The registry-root .forgejo/ tree is excluded below.
 
-variable "project_org" {
-  description = "Org/user owning the repo"
-  type        = string
-  default     = "${project_owner}"
-}
+# Provider identity, pinned to GitHub (issue #14). These blueprints have
+# no forgejo path — the `.forgejo/` tree is dropped in `defaults
+# { exclude }` — so the object exists to keep the template surface
+# uniform with the multi-provider blueprints. `org` still tracks
+# `project_owner`, as the scalar it replaces did.
+variable "git_provider" {
+  description = "Git provider this repo lives on, and the values derived from it"
+  type = object({
+    name                   = string
+    org                    = string
+    host                   = string
+    renovate_config_prefix = string
+  })
+  default = {
+    name                   = "github"
+    org                    = project_owner
+    host                   = "github.com"
+    renovate_config_prefix = "github"
+  }
 
-variable "git_host" {
-  description = "Hostname of the git provider"
-  type        = string
-  default     = "github.com"
-}
-
-variable "renovate_config_prefix" {
-  description = "Renovate `extends:` source prefix"
-  type        = string
-  default     = "github"
+  validation {
+    condition     = contains(["forgejo", "github"], var.git_provider.name)
+    error_message = "git_provider.name must be one of: forgejo, github."
+  }
 }
 
 defaults {

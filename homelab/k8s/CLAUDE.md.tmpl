@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-Per-repo orientation for `${project_org}/${project_name}` — ArgoCD-managed
+Per-repo orientation for `${git_provider.org}/${project_name}` — ArgoCD-managed
 Kubernetes manifests for the homelab cluster.
 
 ## Homelab universals
@@ -23,7 +23,7 @@ apps/<group>/application-set.yaml
 infra/<group>/<app>/             # cluster-level infrastructure
 ```
 
-ArgoCD watches `${project_org}/${project_name}` and syncs everything under
+ArgoCD watches `${git_provider.org}/${project_name}` and syncs everything under
 `apps/*` + `infra/*` to the homelab cluster.
 
 ## Deployment conventions
@@ -173,9 +173,9 @@ ArgoCD watches `${project_org}/${project_name}` and syncs everything under
 
 ## See also
 
-- `${project_org}/tf-live` — Atlantis is deployed *here* but operated
+- `${git_provider.org}/tf-live` — Atlantis is deployed *here* but operated
   *there* (PR comments).
-- `${project_org}/tf-modules` — manifests reference modules via
+- `${git_provider.org}/tf-modules` — manifests reference modules via
   `git::ssh://...?ref=v0.0.0`.
-- `${project_org}/charts` — local charts consumed by `helmCharts` here.
-- `${project_org}/docs` — cross-cutting docs, runbooks, network maps.
+- `${git_provider.org}/charts` — local charts consumed by `helmCharts` here.
+- `${git_provider.org}/docs` — cross-cutting docs, runbooks, network maps.

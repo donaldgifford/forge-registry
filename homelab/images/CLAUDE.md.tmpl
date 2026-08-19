@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-Per-repo orientation for `${project_org}/${project_name}` — Packer image
+Per-repo orientation for `${git_provider.org}/${project_name}` — Packer image
 builds for homelab VMs and shared container images.
 
 ## Homelab universals
@@ -53,7 +53,7 @@ justfile               # `just packer <image>` build wrappers
 
 ## See also
 
-- `${project_org}/tf-live` — Proxmox VM templates built here are consumed
+- `${git_provider.org}/tf-live` — Proxmox VM templates built here are consumed
   by Talos VM creation under `infra-live/`.
-- `${project_org}/k8s` — generic container images built here are
+- `${git_provider.org}/k8s` — generic container images built here are
   referenced by kustomize manifests there.

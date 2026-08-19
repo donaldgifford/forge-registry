@@ -12,12 +12,12 @@ import? 'helm.just'
 
 project_name      := "${project_name}"
 project_owner     := "${project_owner}"
-go_package        := "${git_host}/" + project_owner + "/" + project_name
+go_package        := "${git_provider.host}/" + project_owner + "/" + project_name
 build_dir         := "build"
 bin_dir           := build_dir + "/bin"
 coverage_out      := "coverage.out"
 allowed_licenses  := "Apache-2.0,MIT,BSD-2-Clause,BSD-3-Clause,ISC,MPL-2.0"
-goimports_local   := "${git_host}/" + project_owner
+goimports_local   := "${git_provider.host}/" + project_owner
 
 # Version info derived from git; falls back to dev when not in a repo or tag-less.
 commit_hash := `git rev-parse --short HEAD 2>/dev/null || echo unknown`

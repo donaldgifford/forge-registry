@@ -12,5 +12,5 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: jdx/mise-action@v2
-      # TODO: invoke gitea-label-sync --platform=github for ${project_org}/${project_name}
+      # TODO: invoke gitea-label-sync --platform=github for ${git_provider.org}/${project_name}
       - run: echo "TODO: gitea-label-sync --platform=github --config labels.yaml"
