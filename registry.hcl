@@ -44,9 +44,9 @@ blueprint "go/kubebuilder" {
 blueprint "std/new" {
   path          = "std/new"
   description   = "Generic std blueprint with multi-provider (github / forgejo) support"
-  version       = "0.3.0"
+  version       = "0.3.1"
   tags          = ["std", "new"]
-  latest_commit = "6aaddb4e6a39e9d8f050655ef67c245b42725021"
+  latest_commit = "0f119a31d5e3cf629fd3c9d05e4ca9b733043175"
 }
 
 blueprint "homelab/k8s" {
