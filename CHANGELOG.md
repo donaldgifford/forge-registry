@@ -53,4 +53,5 @@ this project adheres to [Semantic Versioning](https://semver.org/).
 - *(registry)* Sync registry.hcl to the 0.3.0 object migration
 - *(registry)* Refresh latest_commit pins after rebase onto main
 - Keep the donald-loop iteration counter out of the PR diff
+- *(mise)* Require forge 0.8.1 — the object var-file floor
 
