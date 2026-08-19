@@ -1,6 +1,6 @@
 name        = "go-kubebuilder"
 description = "Go Kubernetes operator blueprint (kubebuilder)"
-version     = "0.2.0"
+version     = "0.3.0"
 tags        = ["go", "kubebuilder", "operator", "kubernetes"]
 
 # forge v0.8 variable syntax (IMPL-0003): bareword types + `validation`

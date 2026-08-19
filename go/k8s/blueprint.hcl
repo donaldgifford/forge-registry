@@ -1,6 +1,6 @@
 name        = "go-k8s"
 description = "Go service with container image + Helm chart, registry-flagged CI (GHCR/ECR)"
-version     = "0.2.0"
+version     = "0.3.0"
 tags        = ["go", "k8s", "helm", "docker"]
 
 # forge v0.8 variable syntax (IMPL-0009): bareword types + `validation`

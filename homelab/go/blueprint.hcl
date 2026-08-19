@@ -1,6 +1,6 @@
 name        = "homelab-go"
 description = "Go project blueprint with homelab conventions (forgejo default, github for mirror)"
-version     = "0.2.0"
+version     = "0.3.0"
 tags        = ["homelab", "go", "forgejo"]
 
 # forge v0.8 variable syntax (IMPL-0003): bareword types + `validation`

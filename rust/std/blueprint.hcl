@@ -1,6 +1,6 @@
 name        = "rust-std"
 description = "Rust Standard Repo"
-version     = "0.2.0"
+version     = "0.3.0"
 tags        = ["rust", "std"]
 
 # forge v0.8 variable syntax (IMPL-0003): bareword types + `validation`

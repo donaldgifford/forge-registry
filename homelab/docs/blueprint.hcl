@@ -1,6 +1,6 @@
 name        = "homelab-docs"
 description = "Docusaurus site that aggregates docs from every homelab repo at build time"
-version     = "0.2.0"
+version     = "0.3.0"
 tags        = ["homelab", "docs", "docusaurus", "forgejo"]
 
 # forge v0.8 variable syntax (IMPL-0003): bareword types + `validation`

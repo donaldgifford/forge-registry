@@ -1,6 +1,6 @@
 name        = "homelab-k8s"
 description = "ArgoCD-managed Kubernetes manifests for the homelab cluster"
-version     = "0.2.0"
+version     = "0.3.0"
 tags        = ["homelab", "k8s", "kustomize", "argocd", "forgejo"]
 
 # forge v0.8 variable syntax (IMPL-0003): bareword types + `validation`
