@@ -1,6 +1,6 @@
 name        = "std-new"
 description = "Generic std blueprint with multi-provider (github / forgejo) support"
-version     = "0.3.0"
+version     = "0.3.1"
 tags        = ["std", "new"]
 
 # forge v0.8 variable syntax (IMPL-0003): bareword types + `validation`
@@ -27,12 +27,6 @@ variable "license" {
     condition     = contains(["MIT", "Apache-2.0", "BSD-3-Clause", "none"], var.license)
     error_message = "license must be one of: MIT, Apache-2.0, BSD-3-Clause, none."
   }
-}
-
-variable "go_version" {
-  description = "Go toolchain version (matches go.mod, mise.toml, Dockerfile)"
-  type        = string
-  default     = "1.26.4"
 }
 
 # Single source of truth for the provider and everything derived from it
@@ -102,9 +96,15 @@ variable "project_component_owner" {
   required    = true
 }
 
+# scripts/labels.sh drives the GitHub labels API, so it ships only on
+# the github path — merged into the .github/ exclude (was a duplicate
+# `when` block).
 condition {
-  when    = git_provider.name != "github"
-  exclude = [".github/"]
+  when = git_provider.name != "github"
+  exclude = [
+    ".github/",
+    "scripts/labels.sh",
+  ]
 }
 
 condition {
