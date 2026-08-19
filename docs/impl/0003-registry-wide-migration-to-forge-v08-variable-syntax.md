@@ -1,7 +1,7 @@
 ---
 id: IMPL-0003
 title: "Registry-wide migration to forge v0.8 variable syntax"
-status: In Progress
+status: Completed
 author: Donald Gifford
 created: 2026-08-18
 ---
@@ -10,7 +10,7 @@ created: 2026-08-18
 
 # IMPL 0003: Registry-wide migration to forge v0.8 variable syntax
 
-**Status:** In Progress **Author:** Donald Gifford **Date:** 2026-08-18
+**Status:** Completed **Author:** Donald Gifford **Date:** 2026-08-18
 
 <!--toc:start-->
 
@@ -495,7 +495,8 @@ Two behaviors were deliberately preserved rather than tidied:
 - [x] Commit, push, open the pass-2 PR referencing this doc, wired to close
       issue #14 on merge — PR #20, now ready for review; forge v0.8.1 shipped
       the fix it was gated on
-- [ ] After merge: mark this doc Completed
+- [x] After merge: mark this doc Completed — PR #20 merged as `6aaddb4` on
+      2026-08-19; issue #14 closed
 
 #### Success Criteria
 
@@ -504,7 +505,7 @@ Two behaviors were deliberately preserved rather than tidied:
       and exits 0; `forge registry update` reports all blueprints up to date
 - [x] Pass-2 PR is open and linked to close issue #14 — PR #20, all four checks
       green, mergeable, and no longer blocked: forge v0.8.1 ships the fix
-- [ ] Every checkbox in this doc is ticked
+- [x] Every checkbox in this doc is ticked
 
 ---
 
