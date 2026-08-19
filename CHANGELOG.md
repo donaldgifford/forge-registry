@@ -4,6 +4,12 @@ All notable changes to this project are documented here. The format is
 based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and
 this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [unreleased]
+
+### Bug Fixes
+
+- Forgot to put a gitkeep in the dir
+
 ## [0.1.1] - 2026-08-19
 
 ### Documentation
