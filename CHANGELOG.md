@@ -4,7 +4,7 @@ All notable changes to this project are documented here. The format is
 based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and
 this project adheres to [Semantic Versioning](https://semver.org/).
 
-## [unreleased]
+## [0.1.1] - 2026-08-19
 
 ### Documentation
 
@@ -13,7 +13,7 @@ this project adheres to [Semantic Versioning](https://semver.org/).
 ### Miscellaneous Tasks
 
 - Cleanup ([#22](https://github.com/donaldgifford/forge-registry/issues/22))
-- Remove std/_defaults
+- Remove std/_defaults ([#23](https://github.com/donaldgifford/forge-registry/issues/23))
 
 ## [0.1.0] - 2026-08-19
 
