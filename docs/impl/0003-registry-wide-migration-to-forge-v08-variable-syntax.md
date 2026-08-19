@@ -1,7 +1,7 @@
 ---
 id: IMPL-0003
 title: "Registry-wide migration to forge v0.8 variable syntax"
-status: Draft
+status: In Progress
 author: Donald Gifford
 created: 2026-08-18
 ---
@@ -10,7 +10,7 @@ created: 2026-08-18
 
 # IMPL 0003: Registry-wide migration to forge v0.8 variable syntax
 
-**Status:** Draft **Author:** Donald Gifford **Date:** 2026-08-18
+**Status:** In Progress **Author:** Donald Gifford **Date:** 2026-08-18
 
 <!--toc:start-->
 
@@ -37,9 +37,11 @@ created: 2026-08-18
     - [Success Criteria](#success-criteria-4)
   - [Phase 6: Pass-2 semantics validation (scratch)](#phase-6-pass-2-semantics-validation-scratch)
     - [Tasks](#tasks-5)
+    - [Findings](#findings)
     - [Success Criteria](#success-criteria-5)
   - [Phase 7: Pass-2 object migration (all 19 blueprints + shared templates)](#phase-7-pass-2-object-migration-all-19-blueprints--shared-templates)
     - [Tasks](#tasks-6)
+    - [Findings](#findings-1)
     - [Success Criteria](#success-criteria-6)
   - [Phase 8: Pass-2 verification and landing](#phase-8-pass-2-verification-and-landing)
     - [Tasks](#tasks-7)

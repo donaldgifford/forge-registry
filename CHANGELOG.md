@@ -40,6 +40,7 @@ this project adheres to [Semantic Versioning](https://semver.org/).
 - *(examples)* Move var-files to the git_provider object + add forgejo overlay
 - Record the object migration in IMPL-0003 and CLAUDE.md
 - *(impl-0003)* Check off pass-1 merge and the pass-2 PR
+- *(impl-0003)* Move to In Progress and sync the docz index
 
 ### Testing
 
