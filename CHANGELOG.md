@@ -13,6 +13,7 @@ this project adheres to [Semantic Versioning](https://semver.org/).
 ### Miscellaneous Tasks
 
 - Cleanup ([#22](https://github.com/donaldgifford/forge-registry/issues/22))
+- Remove std/_defaults
 
 ## [0.1.0] - 2026-08-19
 
