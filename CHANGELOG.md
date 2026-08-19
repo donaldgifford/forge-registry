@@ -39,6 +39,7 @@ this project adheres to [Semantic Versioning](https://semver.org/).
 - INV-0001 + IMPL-0003 — plan the registry-wide forge v0.8 migration ([#18](https://github.com/donaldgifford/forge-registry/issues/18))
 - *(examples)* Move var-files to the git_provider object + add forgejo overlay
 - Record the object migration in IMPL-0003 and CLAUDE.md
+- *(impl-0003)* Check off pass-1 merge and the pass-2 PR
 
 ### Testing
 

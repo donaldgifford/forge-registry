@@ -331,7 +331,8 @@ Prove every blueprint scaffolds, then ship the single PR.
 - [x] Commit (drive-bys called out in the message), push, open the single
       registry-wide PR referencing INV-0001 + this doc, with issue #14 linked as
       pass 2 (Phases 6–8)
-- [ ] After merge: check off pass 1 here and start Phase 6
+- [x] After merge: check off pass 1 here and start Phase 6 — #19 merged as
+      `9ddae0a` on 2026-08-19
 
 #### Success Criteria
 
@@ -489,8 +490,9 @@ Two behaviors were deliberately preserved rather than tidied:
 - [x] Negative matrix: bad `git_provider.name` via `--set` object literal and
       via var-file
 - [x] Repo linters clean (yamllint / markdownlint-cli2 / prettier)
-- [ ] Commit, push, open the pass-2 PR referencing this doc, wired to close
-      issue #14 on merge
+- [x] Commit, push, open the pass-2 PR referencing this doc, wired to close
+      issue #14 on merge — PR #20, opened as a **draft** because forge#43 is
+      still unreleased
 - [ ] After merge: mark this doc Completed
 
 #### Success Criteria
@@ -498,9 +500,8 @@ Two behaviors were deliberately preserved rather than tidied:
 - [x] 19/19 scaffolds green with zero `forge registry update` warnings — the
       harness now runs 36 checks (19 default + 13 object-supply + 4 negative)
       and exits 0; `forge registry update` reports all blueprints up to date
-- [ ] Pass-2 PR is open and linked to close issue #14 — **blocked**: pass 1 (PR
-      #19) has to merge first (OQ-1a), and forge#43 has to ship in a released
-      forge before this branch is safe to land
+- [x] Pass-2 PR is open and linked to close issue #14 — PR #20, draft, all four
+      checks green. It must not merge until forge#43 ships in a released forge
 - [ ] Every checkbox in this doc is ticked
 
 ---
