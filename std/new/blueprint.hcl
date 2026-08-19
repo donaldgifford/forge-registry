@@ -96,9 +96,15 @@ variable "project_component_owner" {
   required    = true
 }
 
+# scripts/labels.sh drives the GitHub labels API, so it ships only on
+# the github path — merged into the .github/ exclude (was a duplicate
+# `when` block).
 condition {
-  when    = git_provider.name != "github"
-  exclude = [".github/"]
+  when = git_provider.name != "github"
+  exclude = [
+    ".github/",
+    "scripts/labels.sh",
+  ]
 }
 
 condition {
