@@ -35,43 +35,39 @@ variable "license" {
   }
 }
 
-# Single source of truth — drives project_org / git_host / renovate_config_prefix.
+# Single source of truth for the provider and everything derived from it
+# (issue #14). Objects replace wholesale — forge has no `optional()` for
+# exact object types — so supplying this variable means supplying all
+# four attributes. The forgejo variant ships as
+# docs/examples/forgejo.forge-vars.hcl.
 variable "git_provider" {
-  description = "Git provider this repo lives on"
-  type        = string
-  default     = "github"
+  description = "Git provider this repo lives on, and the values derived from it"
+  type = object({
+    name                   = string
+    org                    = string
+    host                   = string
+    renovate_config_prefix = string
+  })
+  default = {
+    name                   = "github"
+    org                    = "donaldgifford"
+    host                   = "github.com"
+    renovate_config_prefix = "github"
+  }
 
   validation {
-    condition     = contains(["forgejo", "github"], var.git_provider)
-    error_message = "git_provider must be one of: forgejo, github."
+    condition     = contains(["forgejo", "github"], var.git_provider.name)
+    error_message = "git_provider.name must be one of: forgejo, github."
   }
 }
 
-variable "project_org" {
-  description = "Org/user owning the repo"
-  type        = string
-  default     = "${git_provider == "forgejo" ? "homelab" : "donaldgifford"}"
-}
-
-variable "git_host" {
-  description = "Hostname of the git provider"
-  type        = string
-  default     = "${git_provider == "forgejo" ? "git.fartlab.dev" : "github.com"}"
-}
-
-variable "renovate_config_prefix" {
-  description = "Renovate `extends:` source prefix"
-  type        = string
-  default     = "${git_provider == "forgejo" ? "git.fartlab.dev" : "github"}"
-}
-
 condition {
-  when    = git_provider != "github"
+  when    = git_provider.name != "github"
   exclude = [".github/"]
 }
 
 condition {
-  when    = git_provider != "forgejo"
+  when    = git_provider.name != "forgejo"
   exclude = [".forgejo/"]
 }
 

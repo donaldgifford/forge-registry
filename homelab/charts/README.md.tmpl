@@ -16,7 +16,7 @@ charts/<name>/
 ## Publish destinations
 
 - **Primary**: `oci://harbor.fartlab.dev/charts/<name>` (Harbor)
-- **Secondary**: Forgejo Packages (OCI registry on `${git_host}`)
+- **Secondary**: Forgejo Packages (OCI registry on `${git_provider.host}`)
 
 Publish triggers on push to `main` when `charts/<name>/Chart.yaml`
 version bumps.

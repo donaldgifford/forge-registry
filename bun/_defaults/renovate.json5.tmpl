@@ -1,11 +1,11 @@
 {
   $schema: "https://docs.renovatebot.com/renovate-schema.json",
   extends: [
-    "${renovate_config_prefix}>${project_org}/renovate-config",
-    "${renovate_config_prefix}>${project_org}/renovate-config:node",
-    "${renovate_config_prefix}>${project_org}/renovate-config:docker",
-    "${renovate_config_prefix}>${project_org}/renovate-config:helm",
-    "${renovate_config_prefix}>${project_org}/renovate-config:mise",
-    "${renovate_config_prefix}>${project_org}/renovate-config:ci",
+    "${git_provider.renovate_config_prefix}>${git_provider.org}/renovate-config",
+    "${git_provider.renovate_config_prefix}>${git_provider.org}/renovate-config:node",
+    "${git_provider.renovate_config_prefix}>${git_provider.org}/renovate-config:docker",
+    "${git_provider.renovate_config_prefix}>${git_provider.org}/renovate-config:helm",
+    "${git_provider.renovate_config_prefix}>${git_provider.org}/renovate-config:mise",
+    "${git_provider.renovate_config_prefix}>${git_provider.org}/renovate-config:ci",
   ],
 }

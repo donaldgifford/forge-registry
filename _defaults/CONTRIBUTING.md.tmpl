@@ -14,7 +14,7 @@ just lint                         # lint
 
 ## Reporting Issues
 
-Use [GitHub Issues](https://${git_host}/${project_org}/${project_name}/issues) for:
+Use [GitHub Issues](https://${git_provider.host}/${git_provider.org}/${project_name}/issues) for:
 
 - **Bug reports** — include the version you are running, the command you ran,
   and the error you saw
@@ -31,7 +31,7 @@ Use [GitHub Issues](https://${git_host}/${project_org}/${project_name}/issues) f
   `just`) from `mise.toml`
 
 ```bash
-git clone https://${git_host}/${project_org}/${project_name}.git
+git clone https://${git_provider.host}/${git_provider.org}/${project_name}.git
 cd ${project_name}
 mise install
 just lint    # runs linters

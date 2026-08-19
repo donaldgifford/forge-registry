@@ -1,12 +1,12 @@
 # CLAUDE.md
 
-Per-repo orientation for `${project_org}/${project_name}`.
+Per-repo orientation for `${git_provider.org}/${project_name}`.
 
 ## What this is
 
 `${project_name}` ${project_description}:
 
-- Lives on ${git_host} (`${git_host}/${project_org}/${project_name}`);
+- Lives on ${git_provider.host} (`${git_provider.host}/${git_provider.org}/${project_name}`);
 
 ## Layout
 
@@ -27,4 +27,4 @@ justfile                # `just` task runner — `just` for the menu
 ## Renovate
 
 - `mise.toml` versions are handled by a custom regex manager configured
-  upstream in `${project_org}/renovate-config`.
+  upstream in `${git_provider.org}/renovate-config`.

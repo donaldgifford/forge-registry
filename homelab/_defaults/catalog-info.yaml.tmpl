@@ -6,7 +6,7 @@ metadata:
   title: ${project_name}
   description: ${project_description}
   annotations:
-    backstage.io/source-location: url:https://${git_host}/${project_org}/${project_name}
+    backstage.io/source-location: url:https://${git_provider.host}/${git_provider.org}/${project_name}
     backstage.io/techdocs-ref: "dir:."
   tags:
     - homelab
@@ -14,5 +14,5 @@ metadata:
 spec:
   lifecycle: production
   type: service
-  owner: ${project_org}
+  owner: ${git_provider.org}
   system: homelab

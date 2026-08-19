@@ -1,7 +1,7 @@
 # CLAUDE.md
 
-Per-repo orientation for `${project_org}/${project_name}` — Terraform
-modules consumed by `${project_org}/tf-live` via SemVer git tags.
+Per-repo orientation for `${git_provider.org}/${project_name}` — Terraform
+modules consumed by `${git_provider.org}/tf-live` via SemVer git tags.
 
 ## Homelab universals
 
@@ -29,14 +29,14 @@ One module per directory under `modules/`. Modules are independently
 versioned: SemVer git tags consumed by Terragrunt:
 
 ```hcl
-source = "git::ssh://git@${git_host}/${project_org}/${project_name}.git//modules/<name>?ref=v0.0.0"
+source = "git::ssh://git@${git_provider.host}/${git_provider.org}/${project_name}.git//modules/<name>?ref=v0.0.0"
 ```
 
 ## Conventions
 
 - **`versions.tf` lists required_providers** with conservative ranges
   (`>= 5.30.0, < 7.0` for `hashicorp/aws` — Pod Identity floor; see
-  `${project_org}/docs` runbooks).
+  `${git_provider.org}/docs` runbooks).
 - **`terraform-docs` regenerated on every module change**: `just docs`
   (or pre-commit hook). Stale READMEs block PR review.
 - **Bump SemVer on every breaking-change PR**. Minor for new vars
@@ -65,5 +65,5 @@ source = "git::ssh://git@${git_host}/${project_org}/${project_name}.git//modules
 
 ## See also
 
-- `${project_org}/tf-live` — consumer of these modules; Atlantis runs the
+- `${git_provider.org}/tf-live` — consumer of these modules; Atlantis runs the
   plan/apply against the homelab state in Garage S3.

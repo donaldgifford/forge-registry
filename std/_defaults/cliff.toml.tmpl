@@ -31,7 +31,7 @@ trim = true
 render_always = true
 
 postprocessors = [
-  { pattern = '<REPO>', replace = "https://${git_host}/${project_org}/${project_name}" },
+  { pattern = '<REPO>', replace = "https://${git_provider.host}/${git_provider.org}/${project_name}" },
 ]
 
 [git]
@@ -72,5 +72,5 @@ commit_parsers = [
 ]
 
 link_parsers = [
-  { pattern = "#(\\d+)", href = "https://${git_host}/${project_org}/${project_name}/issues/$1" },
+  { pattern = "#(\\d+)", href = "https://${git_provider.host}/${git_provider.org}/${project_name}/issues/$1" },
 ]

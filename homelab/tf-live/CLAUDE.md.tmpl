@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-Per-repo orientation for `${project_org}/${project_name}` — Terragrunt
+Per-repo orientation for `${git_provider.org}/${project_name}` — Terragrunt
 live config + boilerplate templates. Plan/apply runs through Atlantis.
 
 ## Homelab universals
@@ -33,7 +33,7 @@ State lives in Garage S3 at `s3://terraform-state/...` (HMAC creds in
 ### Infra changes
 
 1. Edit `tmpl/**` or `blueprints/**` (or directly in `modules/**` if it's
-   a local module; prefer `${project_org}/tf-modules` SemVer tags).
+   a local module; prefer `${git_provider.org}/tf-modules` SemVer tags).
 2. Regenerate `infra-live/` via the appropriate just recipe — e.g.
    `just talos workers`, `just vms fatman`, `just homelab cluster`,
    `just packer talos beelink`. Or `just bp run <blueprint> <var-file>`.
@@ -65,10 +65,10 @@ Run after adding a new infra-live project.
   Stale `infra-live/` content (manually-edited) is the #1 cause of
   Atlantis drift surprises.
 - **Module references** point at SemVer tags from
-  `${project_org}/tf-modules`:
+  `${git_provider.org}/tf-modules`:
   ```hcl
   terraform {
-    source = "git::ssh://git@${git_host}/${project_org}/tf-modules.git//modules/<name>?ref=v0.0.0"
+    source = "git::ssh://git@${git_provider.host}/${git_provider.org}/tf-modules.git//modules/<name>?ref=v0.0.0"
   }
   ```
 - **Atlantis plan/apply via PR comments**. Direct `terragrunt apply`
@@ -95,8 +95,8 @@ Run after adding a new infra-live project.
 
 ## See also
 
-- `${project_org}/tf-modules` — module sources (SemVer tags).
-- `${project_org}/k8s` — Atlantis runs here; deployment + chart-level
+- `${git_provider.org}/tf-modules` — module sources (SemVer tags).
+- `${git_provider.org}/k8s` — Atlantis runs here; deployment + chart-level
   gotchas live there.
-- `${project_org}/docs` — runbooks (Atlantis config & testing,
+- `${git_provider.org}/docs` — runbooks (Atlantis config & testing,
   EKS Pod Identity) and cross-cutting context.

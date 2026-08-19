@@ -5,7 +5,7 @@ ${project_description}
 Terraform modules consumed by `homelab/tf-live` via SemVer git tags:
 
 ```hcl
-source = "git::ssh://git@${git_host}/${project_org}/${project_name}.git//modules/<name>?ref=v0.0.0"
+source = "git::ssh://git@${git_provider.host}/${git_provider.org}/${project_name}.git//modules/<name>?ref=v0.0.0"
 ```
 
 ## Layout

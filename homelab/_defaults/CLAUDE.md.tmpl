@@ -1,7 +1,7 @@
 # CLAUDE.md
 
-Per-repo orientation for `${project_org}/${project_name}`. Cross-cutting
-context lives in [homelab/docs](https://${git_host}/${project_org}/docs);
+Per-repo orientation for `${git_provider.org}/${project_name}`. Cross-cutting
+context lives in [homelab/docs](https://${git_provider.host}/${git_provider.org}/docs);
 this file documents what's universal to every homelab repo plus what's
 specific to this one. Type-specific content is appended below the
 "Repo-specific" marker.
@@ -33,7 +33,7 @@ specific to this one. Type-specific content is appended below the
   Handles frontmatter, README index, mkdocs nav.
 - **Repo-local docs live in `docs/`**; cross-cutting topics (runbooks,
   network topology, storage guides) live in
-  [homelab/docs](https://${git_host}/${project_org}/docs).
+  [homelab/docs](https://${git_provider.host}/${git_provider.org}/docs).
 - **Backstage TechDocs**: `catalog-info.yaml` registers this repo as a
   Component with `backstage.io/techdocs-ref: dir:.`. mkdocs builds the
   site; Backstage renders it.
@@ -76,14 +76,14 @@ specific to this one. Type-specific content is appended below the
 
 ### Homelab repo map
 
-- `${project_org}/k8s` — ArgoCD-managed kustomize manifests
-- `${project_org}/tf-modules` — Terraform modules, SemVer-tagged
-- `${project_org}/tf-live` — Terragrunt live + Atlantis plan/apply
-- `${project_org}/images` — Packer image builds
-- `${project_org}/charts` — Helm charts (OCI to Harbor + Forgejo Packages)
-- `${project_org}/infra` — Non-IaC config (Talos, network, Proxmox, servers)
-- `${project_org}/docs` — Docusaurus aggregator (cross-cutting docs)
-- `${project_org}/tools` — Go CLIs (forgejo primary, GitHub mirror planned)
+- `${git_provider.org}/k8s` — ArgoCD-managed kustomize manifests
+- `${git_provider.org}/tf-modules` — Terraform modules, SemVer-tagged
+- `${git_provider.org}/tf-live` — Terragrunt live + Atlantis plan/apply
+- `${git_provider.org}/images` — Packer image builds
+- `${git_provider.org}/charts` — Helm charts (OCI to Harbor + Forgejo Packages)
+- `${git_provider.org}/infra` — Non-IaC config (Talos, network, Proxmox, servers)
+- `${git_provider.org}/docs` — Docusaurus aggregator (cross-cutting docs)
+- `${git_provider.org}/tools` — Go CLIs (forgejo primary, GitHub mirror planned)
 
 ---
 
