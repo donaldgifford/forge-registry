@@ -53,6 +53,7 @@ created: 2026-08-18
   - [4. Pass-2 (#14 object consolidation) planning](#4-pass-2-14-object-consolidation-planning)
 - [Dependencies](#dependencies)
 - [References](#references)
+
 <!--toc:end-->
 
 ## Objective
@@ -120,6 +121,13 @@ this plan builds on:
 - Blueprints missing variables referenced by inherited `_defaults/` templates
   fail at **render** time (`Unknown variable`), not load time — the go/k8s fix
   (pinned scalars + `defaults { exclude }`) is the proven remedy.
+- Render errors surface **one variable at a time**, so the surface gap is found
+  iteratively. The authoritative check is grepping single-`$` `${var}`
+  references in inherited `.tmpl` files: `$${...}` is an escape for downstream
+  tools, and non-`.tmpl` files (e.g. `scripts/labels.sh`, whose
+  `${color}`/`${repo_name}` are shell locals) are copied verbatim and never
+  parsed. Phase 2 found `go_version` this way — it was missing from the INV-0001
+  inventory table.
 - Hooks are decoded but never executed (forge#41) — hook edits here are
   forward-looking, not testable.
 
@@ -142,21 +150,21 @@ Observation 4.
 
 #### Tasks
 
-- [ ] Migrate go/cli: bareword types, `validation` blocks for the two kebab-case
+- [x] Migrate go/cli: bareword types, `validation` blocks for the two kebab-case
       regexes, `contains()` validation replacing the `license` and
       `git_provider` enums, `git_provider` default `"github"`; ternary defaults
       and `condition` blocks untouched; delete the trailing commented-out
       `backstage_tags` block
-- [ ] Propagate the migrated body to go/docker and std/new (preserve each file's
+- [x] Propagate the migrated body to go/docker and std/new (preserve each file's
       `name`/`description`/`tags` header)
-- [ ] Migrate bun/std (same shape; `bun_version`/`node_version` in place of
+- [x] Migrate bun/std (same shape; `bun_version`/`node_version` in place of
       `go_version`)
-- [ ] Migrate std/docs; merge its two `git_provider != "github"` conditions into
+- [x] Migrate std/docs; merge its two `git_provider != "github"` conditions into
       one exclude list; drop the commented-out hooks blocks (hooks don't execute
       — forge#41)
-- [ ] Migrate the 7 identical homelab bodies + homelab/go (superset with
+- [x] Migrate the 7 identical homelab bodies + homelab/go (superset with
       `go_version` and the two-command hook)
-- [ ] Flip `git_provider` default to `"github"` in all 13
+- [x] Flip `git_provider` default to `"github"` in all 13
 
 #### Success Criteria
 
@@ -170,6 +178,25 @@ Observation 4.
 - No `.tmpl` file changed; scaffold diffs vs. pre-migration output show only the
   provider-default flip
 
+  Verified by byte-diff. A true pre-migration scaffold is impossible (main's
+  blueprints don't load on forge 0.8 — that's the bug), so the baseline is
+  main's blueprints with **only** the mechanical syntax swap applied: old
+  `forgejo` default kept, std/docs' two conditions left unmerged. Scaffolding
+  baseline and migrated with the same explicit `--set git_provider=...`
+  neutralizes the default flip, isolating any other behavior change:
+
+  | Blueprint   | `git_provider=github` | `git_provider=forgejo` |
+  | ----------- | --------------------- | ---------------------- |
+  | go/cli      | identical             | identical              |
+  | std/docs    | identical             | identical              |
+  | bun/std     | identical             | identical              |
+  | homelab/k8s | identical             | identical              |
+
+  (`.forge-lock.hcl` excluded — it records the registry path and commit.) The
+  std/docs rows are the load-bearing ones: they prove merging its two duplicate
+  `git_provider != "github"` condition blocks into one exclude list changed no
+  output on either path.
+
 ---
 
 ### Phase 2: Surface reconciliation — go/ext, go/kubebuilder, rust/std, rust/esp32
@@ -181,19 +208,22 @@ go/k8s pinned-defaults pattern: GitHub-pinned scalars, no `git_provider` prompt,
 
 #### Tasks
 
-- [ ] Syntax swap in all four (validate → validation, license enum →
+- [x] Syntax swap in all four (validate → validation, license enum →
       `contains()`, bareword types)
-- [ ] rust/std + rust/esp32: add `project_owner` (required, kebab-case
+- [x] rust/std + rust/esp32: add `project_owner` (required, kebab-case
       validation) — inherited `justfile.tmpl` and `CONTRIBUTING.md.tmpl`
       reference it
-- [ ] All four: add pinned scalars — `project_org` (default
+- [x] All four: add pinned scalars — `project_org` (default
       `"${project_owner}"`), `git_host` (default `"github.com"`),
       `renovate_config_prefix` (default `"github"`)
-- [ ] All four: add the four Backstage `project_component_*` variables as
+- [x] All four: add the four Backstage `project_component_*` variables as
       `required = true` (OQ-2b — go/k8s parity, explicit Backstage identity)
-- [ ] All four: `defaults { exclude }` of the root `.forgejo/` relpaths — copy
+- [x] All four: `defaults { exclude }` of the root `.forgejo/` relpaths — copy
       the exact-relpath list from `go/k8s/blueprint.hcl` (no globs)
-- [ ] go/kubebuilder: add `hooks { post_create = ["git init", "go mod tidy"] }`
+- [x] go/ext + go/kubebuilder: declare `go_version` (default `"1.26.4"`) — gap
+      not caught by the INV-0001 inventory; `go/_defaults/CLAUDE.md.tmpl`,
+      `mise.toml.tmpl` and `go.mod.tmpl` all reference it
+- [x] go/kubebuilder: add `hooks { post_create = ["git init", "go mod tidy"] }`
       (drive-by; it inherits `go/_defaults/go.mod.tmpl` so tidy is applicable)
 
 #### Success Criteria
@@ -206,6 +236,13 @@ go/k8s pinned-defaults pattern: GitHub-pinned scalars, no `git_provider` prompt,
 - Interactive prompt surface is exactly the project vars plus the four required
   component vars (OQ-2b); no provider prompts
 
+  Verified with `forge info <bp>/blueprint.hcl -o json` (prompting can't be
+  driven from a non-TTY — forge errors on the first required variable instead).
+  All five reconciled blueprints report the same surface: seven required
+  variables (`project_name`, `project_owner`, `project_description` + the four
+  `project_component_*`), with `license`, `go_version` and the three provider
+  scalars defaulted, and **no `git_provider` variable declared**.
+
 ---
 
 ### Phase 3: go/std rebuild
@@ -215,14 +252,14 @@ registry's scalar conventions, and give it the same pinned surface as Phase 2.
 
 #### Tasks
 
-- [ ] Syntax swap on `project_name` / `project_owner` / `project_description`
-- [ ] Delete `backstage_tags` (`type = "map"`, required, zero template
+- [x] Syntax swap on `project_name` / `project_owner` / `project_description`
+- [x] Delete `backstage_tags` (`type = "map"`, required, zero template
       consumers)
-- [ ] Add `license` (string, `contains()` validation, default `"Apache-2.0"`) —
+- [x] Add `license` (string, `contains()` validation, default `"Apache-2.0"`) —
       inherited `README.md.tmpl` renders `${license}`
-- [ ] Add the four `project_component_*` variables (`required = true`, same
+- [x] Add the four `project_component_*` variables (`required = true`, same
       shape as Phase 2)
-- [ ] Add pinned provider scalars + `.forgejo/` defaults-exclude (same shape as
+- [x] Add pinned provider scalars + `.forgejo/` defaults-exclude (same shape as
       Phase 2)
 
 #### Success Criteria
@@ -242,19 +279,19 @@ the old syntax as the convention.
 
 #### Tasks
 
-- [ ] homelab/go: `go_version` `"1.24"` → `"1.26.4"` (family default)
-- [ ] Bump `version` 0.1.0 → 0.2.0 in all 18 migrated `blueprint.hcl` files
+- [x] homelab/go: `go_version` `"1.24"` → `"1.26.4"` (family default)
+- [x] Bump `version` 0.1.0 → 0.2.0 in all 18 migrated `blueprint.hcl` files
       (go/k8s stays 0.2.0)
-- [ ] registry.hcl: rename the dash-keyed entries (`blueprint "go-std"`,
+- [x] registry.hcl: rename the dash-keyed entries (`blueprint "go-std"`,
       `blueprint "go-kubebuilder"`) to slash form matching the rest
-- [ ] Run `forge registry update --registry-dir .` — expect **zero** `missing`
+- [x] Run `forge registry update --registry-dir .` — expect **zero** `missing`
       warnings; verify every entry shows 0.2.0
-- [ ] Root `CLAUDE.md`: update the Key Conventions variable example from
+- [x] Root `CLAUDE.md`: update the Key Conventions variable example from
       `type = "string"` to v0.8 syntax (bareword + `validation`)
-- [ ] `docs/examples/README.md`: replace the "Until that migration lands…"
+- [x] `docs/examples/README.md`: replace the "Until that migration lands…"
       paragraph — the registry is now fully v0.8; note that enum values are
       enforced by `validation` blocks
-- [ ] Add `docs/examples/go-cli.forge-vars.hcl` showing the migrated cluster
+- [x] Add `docs/examples/go-cli.forge-vars.hcl` showing the migrated cluster
       surface (provider + enum + Backstage vars)
 
 #### Success Criteria
@@ -265,6 +302,15 @@ the old syntax as the convention.
   touched
 - No doc in the repo shows the removed v0.6 forms as current convention
 
+  Audited by grepping `docs/` and root markdown for `type = "choice"`,
+  `choices =` and `validate = "`. Most hits describe the removal (IMPL-0002,
+  DESIGN-0004, CLAUDE.md) and are correct as written. Two **Draft** design docs
+  — DESIGN-0002 and DESIGN-0003 — showed legacy `blueprint.hcl` snippets as the
+  shape to build, which would have led an implementer to write syntax that no
+  longer loads. Both now carry a syntax note pointing at IMPL-0003 and
+  CLAUDE.md; their design intent is untouched, since rewriting proposals is out
+  of scope for this migration.
+
 ---
 
 ### Phase 5: Full-registry verification and landing
@@ -273,16 +319,16 @@ Prove every blueprint scaffolds, then ship the single PR.
 
 #### Tasks
 
-- [ ] Write `scripts/scaffold-smoke.sh` (OQ-3a) and smoke-scaffold all 19
+- [x] Write `scripts/scaffold-smoke.sh` (OQ-3a) and smoke-scaffold all 19
       blueprints with minimal `--set` vars into a tmpdir: assert exit 0 and
       non-empty output for each
-- [ ] Negative matrix: bad `license`, `git_provider`, and `container_registry`
+- [x] Negative matrix: bad `license`, `git_provider`, and `container_registry`
       values each fail with a validation error
-- [ ] Variant spot-checks: one cluster blueprint with `git_provider=forgejo`;
+- [x] Variant spot-checks: one cluster blueprint with `git_provider=forgejo`;
       go/k8s ghcr + ecr scaffolds unchanged (regression guard for the shared
       `_defaults/`)
-- [ ] Repo linters clean (yamllint / markdownlint-cli2 / prettier)
-- [ ] Commit (drive-bys called out in the message), push, open the single
+- [x] Repo linters clean (yamllint / markdownlint-cli2 / prettier)
+- [x] Commit (drive-bys called out in the message), push, open the single
       registry-wide PR referencing INV-0001 + this doc, with issue #14 linked as
       pass 2 (Phases 6–8)
 - [ ] After merge: check off pass 1 here and start Phase 6
@@ -306,26 +352,71 @@ empirically first (INV-0001-style scratch registry) before touching real files.
 
 #### Tasks
 
-- [ ] Scratch-test object semantics on forge 0.8: does a fully-defaulted object
+- [x] Scratch-test object semantics on forge 0.8: does a fully-defaulted object
       skip prompting; can an object `default` carry cross-variable/ternary
       expressions; does `--set` of a partial object literal merge or replace;
       how do field-level validation failures read
-- [ ] Freeze the object shape (issue #14 proposal:
+- [x] Freeze the object shape (issue #14 proposal:
       `name`/`org`/`host`/`renovate_config_prefix`) with GitHub default values
       (INV-0001 OQ-2a carries over)
-- [ ] Grep-inventory every `${project_org}` / `${git_host}` /
+- [x] Grep-inventory every `${project_org}` / `${git_host}` /
       `${renovate_config_prefix}` reference across all `_defaults/` levels and
       blueprint-owned templates (INV-0001 Observation 5 is the seed list)
-- [ ] Draft the forgejo supply story: a `.forge-vars.hcl` overlay carrying the
-      full object (fartlab values), validated in the scratch registry
-- [ ] Record confirmed semantics + final shape on issue #14
+- [x] Draft the forgejo supply story: a `.forge-vars.hcl` overlay carrying the
+      full object (fartlab values), validated in the scratch registry —
+      **blocked by forge#42**, see findings
+- [x] Record confirmed semantics + final shape on issue #14
+      ([comment](https://github.com/donaldgifford/forge-registry/issues/14#issuecomment-5332115111))
+
+#### Findings
+
+Scratch registry at `/tmp/p6-reg` (copy of this branch), forge 0.8.0
+(`806263d`). **The shape is validated; the supply channel is blocked.**
+
+Working as designed:
+
+- A fully-defaulted object needs no prompt and no supply.
+- Templates traverse it natively — the 9 shared `_defaults` templates rewritten
+  to `${git_provider.org}` / `.host` / `.renovate_config_prefix` render
+  correctly (`module github.com/donaldgifford/objtest`).
+- `condition { when = git_provider.name != "github" }` works.
+- Field-level validation reads well:
+  `git_provider.name must be one of: forgejo, github.` with position.
+- `--set` with a **full** object literal works (forgejo variant, 34 files).
+
+Blocked — **forge#42**: the same object supplied via `--var-file` fails with
+`converting variables to cty: variable "git_provider": object required, but have string`.
+Root cause is `ctyToGo` in forge's `internal/prompt/prompt.go` returning
+`val.GoString()` (the Go debug representation) for non-primitive types — a stale
+"vars files are scalar-only" assumption from IMPL-0008 that IMPL-0009
+invalidated. The var-file loader itself is correct: it type-checks the object
+and rejects partials with a good message. **Fix open as forge#43** — see
+Dependencies.
+
+Constraint — **objects replace, never merge**. All attributes are required on
+every supply, and `optional(string)` / `optional(string, "default")` modifiers
+are rejected
+(`Optional attribute modifier is only for type constraints, not for exact types`).
+So today's `--set git_provider=forgejo` — which re-derives org/host/prefix
+through the ternaries — has no post-migration equivalent; switching providers
+means restating all four fields.
+
+Scope is larger than the `_defaults`-only estimate: **169 references across ~40
+template files** (`project_org` 103/32, `git_host` 38/27,
+`renovate_config_prefix` 28/6), including blueprint-owned templates like
+`homelab/*/CLAUDE.md.tmpl`, `homelab/docs/docusaurus.config.js.tmpl`,
+`homelab/go/.goreleaser.yml.tmpl`, `go/k8s/renovate.json5.tmpl` and
+`std/_defaults/cliff.toml.tmpl`.
 
 #### Success Criteria
 
-- Object default/prompt/`--set` behavior is confirmed empirically, not assumed
-- Final object shape and the complete template-reference inventory are posted to
-  issue #14
-- The forgejo overlay renders correctly in the scratch registry
+- [x] Object default/prompt/`--set` behavior is confirmed empirically, not
+      assumed
+- [x] Final object shape and the complete template-reference inventory are
+      posted to issue #14
+- [ ] The forgejo overlay renders correctly in the scratch registry — **not
+      met**: blocked by forge#42. Phase 7 is gated on that fix (see
+      Dependencies).
 
 ---
 
@@ -480,7 +571,32 @@ after pass 1 merges.
 - forge#41 (hooks never executed) — hook edits in Phases 1–2 are forward-looking
   only.
 - Phases 6–8 start only after the pass-1 PR merges; issue #14 stays open as the
-  pass-2 tracker until Phase 8 closes it.
+  pass-2 tracker until Phase 8 closes it. (Phase 6 is scratch-only research and
+  ran ahead of the merge without touching the registry.)
+- **Phase 7 is gated on forge#42** — var-files cannot supply object variables in
+  forge 0.8.0. Migrating before that fix ships would leave a shell-quoted
+  `--set` literal as the only way to switch providers, and would make the
+  `docs/examples/*.forge-vars.hcl` files unable to express the provider at all.
+  See Phase 6 Findings.
+
+  The fix is **written, tested, and open as forge#43**. A build of that branch
+  resolves an object var-file correctly — attributes drive both templates
+  (`module git.fartlab.dev/homelab/objtest`) and conditions (`.forgejo/`
+  shipped, `.github/` excluded), field-level `validation` still fires through
+  the var-file path — and scaffolds all 19 current blueprints with no
+  regression. Three regression tests fail on forge `main` and pass on the
+  branch.
+
+  forge#43 also fixes a second arm of the same root cause, found while writing
+  those tests: `goToCty` stringified an already-resolved `cty.Value` when
+  building the `hcl.EvalContext`, so a later variable's default could not
+  traverse into an object attribute (`${git_provider.host}/${git_provider.org}`)
+  — on the `--set` object path as well as the var-file path. Phase 7's Task 3
+  depends on that working, since several `_defaults` templates compose provider
+  attributes into other variables' defaults.
+
+  Phase 7 unblocks once forge#43 merges and lands in a released forge that
+  `forge version` reports.
 
 ## References
 
@@ -489,6 +605,8 @@ after pass 1 merges.
 - forge `docs/MIGRATION.md` — "Variable type system upgrade (v0.7+)"
 - forge-registry issue #14 — pass 2 (`git_provider` object)
 - forge#41 — RunPostCreate hooks never invoked
+- forge#42 — var-files cannot supply object/list/map variables (blocks Phase 7;
+  filed from Phase 6 findings); fix open as forge#43
 - `go/k8s/blueprint.hcl` — reference v0.8 blueprint (pinned-defaults +
   `defaults { exclude }` pattern)
 - DESIGN-0004 / IMPL-0002 — where the go/k8s pattern was established
