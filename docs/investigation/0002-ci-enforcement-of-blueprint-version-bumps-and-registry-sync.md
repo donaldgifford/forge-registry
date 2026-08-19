@@ -1,0 +1,333 @@
+---
+id: INV-0002
+title: "CI enforcement of blueprint version bumps and registry sync"
+status: Concluded
+author: Donald Gifford
+created: 2026-08-19
+---
+
+<!-- markdownlint-disable-file MD024 MD025 MD041 -->
+
+# INV-0002: CI enforcement of blueprint version bumps and registry sync
+
+<!--toc:start-->
+
+- [Question](#question)
+- [Hypothesis](#hypothesis)
+- [Context](#context)
+- [Approach](#approach)
+- [Environment](#environment)
+- [Findings](#findings)
+  - [Observation 1: --check already exists and is exactly the CI primitive](#observation-1---check-already-exists-and-is-exactly-the-ci-primitive)
+  - [Observation 2: staleness is a git-log comparison, not a content hash](#observation-2-staleness-is-a-git-log-comparison-not-a-content-hash)
+  - [Observation 3: --check does not enforce version bumps](#observation-3---check-does-not-enforce-version-bumps)
+  - [Observation 4: the second PR is not required — a second commit is](#observation-4-the-second-pr-is-not-required--a-second-commit-is)
+  - [Observation 5: squash and rebase merges both invalidate the pin](#observation-5-squash-and-rebase-merges-both-invalidate-the-pin)
+  - [Observation 6: the repo already has the auto-sync pattern](#observation-6-the-repo-already-has-the-auto-sync-pattern)
+- [Conclusion](#conclusion)
+- [Recommendation](#recommendation)
+- [Open Questions](#open-questions)
+  - [1. How to close the version-bump gap](#1-how-to-close-the-version-bump-gap)
+  - [2. How to handle post-merge pin drift](#2-how-to-handle-post-merge-pin-drift)
+  - [3. Where the registry check should live](#3-where-the-registry-check-should-live)
+  - [4. Whether to pursue an upstream forge change](#4-whether-to-pursue-an-upstream-forge-change)
+  - [5. Scope of the first implementation](#5-scope-of-the-first-implementation)
+- [References](#references)
+
+<!--toc:end-->
+
+## Question
+
+Can `forge` block a PR in GitHub Actions when someone edits a blueprint but does
+not bump its `version` and does not run `forge registry update` — and can the
+current two-step workflow (merge the blueprint, then open a second PR to sync
+`registry.hcl`) be eliminated?
+
+## Hypothesis
+
+That `registry.hcl`'s `latest_commit` is inherently self-referential — an entry
+cannot record the hash of the commit that contains it — so a CI check would
+always be one commit behind, and a follow-up PR would be structurally
+unavoidable.
+
+**This turned out to be wrong**, and the real cause is somewhere else entirely.
+
+## Context
+
+Every blueprint entry in `registry.hcl` carries a `latest_commit` pin. Twice
+during IMPL-0003 the pins went stale immediately after merge, each time
+requiring a follow-up commit that did nothing but re-run
+`forge registry update`. The assumption was that this is inherent to the design.
+
+The repo also has no protection against the more basic mistake: editing a
+template and forgetting to bump the blueprint's `version`, which silently ships
+changed output under an unchanged version number.
+
+**Triggered by:** IMPL-0003 (pins went stale after both the #19 and #20 merges)
+
+## Approach
+
+All experiments were run against the real registry on a scratch branch, with
+every scratch commit reset afterwards. `git` merge strategies were simulated
+locally rather than by opening throwaway PRs.
+
+1. Read `forge registry update`'s implementation at the pinned **v0.8.1** tag to
+   establish how staleness is computed.
+2. Probe `--check` against an uncommitted edit, then the same edit committed.
+3. Test whether the "commit blueprint, sync, commit `registry.hcl`" sequence
+   converges on a branch.
+4. Simulate squash merge, rebase merge, and true merge commit; run `--check`
+   after each.
+5. Test whether `--check` fires when a template changes but `version` does not.
+
+## Environment
+
+| Component        | Version / Value                                         |
+| ---------------- | ------------------------------------------------------- |
+| forge            | 0.8.1 (`d207c77`), pinned in `mise.toml`                |
+| registry         | `main` @ `fb39168`, all 19 blueprints at 0.3.0          |
+| Source of truth  | `internal/registrycmd/update.go` at tag `v0.8.1`        |
+| Merge strategies | squash, merge, and rebase all currently enabled on repo |
+
+## Findings
+
+### Observation 1: `--check` already exists and is exactly the CI primitive
+
+No forge change is needed for the registry half of this. `forge registry update`
+ships a `--check` flag whose help text names CI explicitly:
+
+```console
+$ forge registry update --help
+Use --check for CI mode: reports stale entries and exits non-zero without
+modifying any files.
+```
+
+Verified: exit `0` on a clean tree, exit `1` with a `files-changed` warning when
+stale. It writes nothing.
+
+### Observation 2: staleness is a git-log comparison, not a content hash
+
+From `update.go` at v0.8.1:
+
+```go
+func latestCommitForPath(registryDir, bpPath string) (string, error) {
+	args := []string{"-C", registryDir, "log", "-1", "--format=%H", "--", bpPath + "/"}
+	...
+}
+```
+
+Each entry is compared on two axes — `version` and `latest_commit` — producing
+four statuses: `up-to-date`, `version-changed`, `files-changed`, `both-changed`.
+
+Two consequences follow from this being a **git-log** comparison:
+
+- **Only committed changes are visible.** An uncommitted edit to
+  `go/cli/mise.toml.tmpl` still reports `up-to-date`. Harmless for CI, which
+  always operates on commits, but it means `--check` is useless as a pre-commit
+  hook.
+- **The path filter is `<bpPath>/`.** `registry.hcl` lives at the repo root, so
+  committing a registry sync does **not** re-bump any blueprint's pin. This is
+  the detail that makes Observation 4 work.
+
+### Observation 3: `--check` does not enforce version bumps
+
+This is the gap. `forge registry update` copies `blueprint.hcl`'s version into
+`registry.hcl`; it never asserts that the version _changed_. So the following
+sequence passes cleanly with the version untouched:
+
+```console
+$ echo "# probe" >> go/cli/mise.toml.tmpl && git commit -am "template change, NO version bump"
+$ forge registry update --check
+warning:   go/cli    files-changed          # ← fires here
+
+$ forge registry update && git commit -am "sync registry"
+$ forge registry update --check
+✓ All blueprints up to date                 # ← exit 0
+$ grep '^version' go/cli/blueprint.hcl
+version     = "0.3.0"                       # ← never bumped
+```
+
+`--check` answers _"is `registry.hcl` consistent with the tree?"_, not _"did the
+author bump the version they were supposed to?"_. **The two halves of the
+original request need two different mechanisms.**
+
+### Observation 4: the second PR is not required — a second commit is
+
+The premise behind the follow-up-PR workflow does not hold. Because the pin's
+path filter excludes `registry.hcl` (Observation 2), the sync converges **within
+a single branch**:
+
+```console
+$ git commit -m "bump go/cli to 0.4.0"        # blueprint change
+$ forge registry update --check
+warning:   go/cli    both-changed                exit=1
+
+$ forge registry update && git commit -m "sync registry"   # registry-only commit
+$ forge registry update --check
+✓ All blueprints up to date                       exit=0
+```
+
+Two commits in one PR, no second PR. This is already what a `--check` CI job
+would demand, and it is satisfiable.
+
+### Observation 5: squash and rebase merges both invalidate the pin
+
+Here is the actual cause of the recurring drift. Simulating each strategy
+against a converged branch:
+
+| Merge strategy   | `--check` on main after merge | Why                                |
+| ---------------- | ----------------------------- | ---------------------------------- |
+| **Squash**       | exit **1**, `files-changed`   | collapses N commits into a new SHA |
+| **Rebase**       | exit **1**, `files-changed`   | replays commits under new SHAs     |
+| **Merge commit** | exit **0**, `up-to-date`      | original SHAs preserved verbatim   |
+
+After a simulated squash merge the pin does not merely lag — it points at a
+commit that is **not in `main`'s history at all**:
+
+```console
+$ git merge-base --is-ancestor "$PIN" HEAD
+NO — pin references a commit absent from main's history
+```
+
+Rebase-merge failing is the non-obvious one: it produces linear history and
+preserves commit _messages_, but rewrites every SHA, so the pin is just as dead
+as under squash. Only a true merge commit keeps the referenced objects
+reachable.
+
+The repo currently allows all three strategies, and recent PRs (#19, #20, #21)
+were squash-merged — which is precisely why the pins broke each time.
+
+### Observation 6: the repo already has the auto-sync pattern
+
+`.github/workflows/changelog-regen.yml` solves the identical shape of problem
+for `CHANGELOG.md`: on push to `main` it regenerates the artifact, commits it,
+and guards against self-triggering:
+
+```yaml
+if: ${{ !startsWith(github.event.head_commit.message, 'chore(changelog)') }}
+```
+
+paired with a `changelog.yml` PR job that fails on drift. A registry equivalent
+would be a near-copy, and would make post-merge pin drift self-healing
+regardless of merge strategy.
+
+## Conclusion
+
+**Answer: Yes — and more cheaply than expected.**
+`forge registry update --check` is a drop-in CI gate today and needs no forge
+changes. The hypothesis that a follow-up PR is structurally unavoidable is
+**refuted**: a registry-sync commit on the same branch converges, because the
+pin's path filter ignores `registry.hcl`.
+
+The recurring drift is **caused by squash-merging**, not by forge. Squash and
+rebase both rewrite SHAs and orphan the pin; a merge commit does not.
+
+Two caveats shape the implementation:
+
+- `--check` does **not** enforce version bumps (Observation 3). That half needs
+  a separate check comparing changed paths against `blueprint.hcl` version
+  diffs.
+- `--check` only sees committed changes, so it belongs in CI, not a pre-commit
+  hook.
+
+## Recommendation
+
+Pair a PR-time gate with post-merge self-healing, mirroring the changelog setup
+the repo already runs:
+
+1. **`registry.yml` PR job** — `forge registry update --check`, failing the PR
+   when `registry.hcl` is out of sync. Add a second step that diffs changed
+   `<category>/<name>/**` paths against `blueprint.hcl` version changes to close
+   the Observation 3 gap.
+2. **`registry-regen.yml` push-to-main job** — re-run `forge registry update`
+   and auto-commit, with a `chore(registry)` loop guard. This absorbs
+   squash-induced drift permanently and makes the merge-strategy question moot.
+
+Answers to the open questions below should drive an IMPL doc.
+
+## Open Questions
+
+Answer format: pick a letter per question (a = recommendation), or write in your
+own ("other").
+
+### 1. How to close the version-bump gap
+
+`--check` cannot detect an unbumped version (Observation 3). Something has to
+compare "which blueprint directories did this PR touch?" against "which
+`blueprint.hcl` versions changed?".
+
+- **a (Recommended):** A shell step in the PR workflow. For each
+  `<category>/<name>/` with changes in
+  `git diff --name-only origin/main...HEAD`, assert
+  `git diff origin/main...HEAD -- <bp>/blueprint.hcl` contains a `+version`
+  line. ~15 lines of bash, no new dependencies, and it reuses the `scripts/`
+  conventions already in the repo.
+- b: Require a `blueprint-change` PR label and check it, leaving the judgement
+  to the author — simpler, but trivially forgotten and unenforced.
+- c: Ask forge for a `--require-bump` flag on `registry update --check` so the
+  whole thing is one command — cleanest long-term, but blocks this work on an
+  upstream release.
+- d: Skip it. Treat registry sync as the only gate and rely on review to catch
+  unbumped versions.
+
+### 2. How to handle post-merge pin drift
+
+Squash merge orphans the pin every time (Observation 5).
+
+- **a (Recommended):** Add `registry-regen.yml` — auto-sync on push to `main`
+  with a `chore(registry)` loop guard, copying `changelog-regen.yml`. Keeps
+  squash merging, self-heals, zero author burden.
+- b: Disable squash and rebase merges on the repo, requiring merge commits for
+  everything. No new automation, but it changes the merge policy for every PR in
+  the repo to serve one file, and produces a noisier history.
+- c: Keep squash but require merge commits **only** for PRs touching blueprints
+  — narrower than (b), but it is a convention no CI can easily enforce.
+- d: Accept the drift and let the next PR's auto-sync fix it, treating pins as
+  eventually-consistent.
+
+### 3. Where the registry check should live
+
+- **a (Recommended):** A new `registry.yml` workflow, matching the existing
+  one-concern-per-file layout (`changelog.yml`, `pr-labels.yml`,
+  `trufflehog.yml`).
+- b: A job inside the existing `ci.yml`, which today only runs the labeler —
+  fewer files, but `ci.yml` becomes a grab bag.
+- c: Extend `scripts/scaffold-smoke.sh` to also assert registry freshness, so
+  one script covers all verification — but it conflates scaffold correctness
+  with metadata hygiene.
+
+### 4. Whether to pursue an upstream forge change
+
+The pin is a commit SHA, which is what makes it fragile under history rewrites.
+A content hash of the blueprint directory would be immune to squash, rebase, and
+cherry-pick alike.
+
+- **a (Recommended):** File an issue describing the squash/rebase failure mode
+  and propose a content-hash (or hybrid) pin, but do not block this work on it.
+  The CI plan above stands on its own and stays valid either way.
+- b: Implement the content-hash change in forge first, then wire up CI — fixes
+  the root cause, but it is a breaking registry-format change requiring a
+  migration for every existing entry.
+- c: Leave forge alone; the auto-sync workflow makes the fragility invisible in
+  practice.
+
+### 5. Scope of the first implementation
+
+- **a (Recommended):** Ship the PR check and the auto-sync workflow together.
+  They are complementary — the check without auto-sync means a red `main` after
+  every squash merge, which trains people to ignore it.
+- b: PR check first, observe how often drift actually bites, add auto-sync only
+  if warranted.
+- c: Auto-sync first (it removes existing pain immediately), add the PR gate
+  once the noise is gone.
+
+## References
+
+- [INV-0001](0001-migrate-remaining-blueprints-to-forge-v08-variable-syntax-and.md)
+  — the v0.8 migration investigation
+- IMPL-0003 — where the pin drift was hit twice, after #19 and after #20
+- forge `internal/registrycmd/update.go` @ `v0.8.1` — `latestCommitForPath`,
+  `detectStatus`
+- `.github/workflows/changelog-regen.yml` / `changelog.yml` — the drift-check +
+  auto-sync pattern this proposal mirrors
+- forge#43 — the var-file object fix shipped in v0.8.1
