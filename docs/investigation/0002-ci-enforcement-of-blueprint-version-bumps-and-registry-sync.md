@@ -32,6 +32,13 @@ created: 2026-08-19
   - [3. Where the registry check should live](#3-where-the-registry-check-should-live)
   - [4. Whether to pursue an upstream forge change](#4-whether-to-pursue-an-upstream-forge-change)
   - [5. Scope of the first implementation](#5-scope-of-the-first-implementation)
+- [Addendum: release-flow design (2026-08-20)](#addendum-release-flow-design-2026-08-20)
+  - [Observation 7: squash commit subjects broke the changelog](#observation-7-squash-commit-subjects-broke-the-changelog)
+  - [Observation 8: pr-semver-bump cannot tag a commit created mid-run](#observation-8-pr-semver-bump-cannot-tag-a-commit-created-mid-run)
+  - [Observation 9: git-cliff --tag dissolves the ordering cycle](#observation-9-git-cliff---tag-dissolves-the-ordering-cycle)
+  - [Observation 10: an existing action fits — haya14busa/action-bumpr](#observation-10-an-existing-action-fits--haya14busaaction-bumpr)
+  - [The release flow](#the-release-flow)
+  - [Consequences for existing workflows](#consequences-for-existing-workflows)
 - [References](#references)
 
 <!--toc:end-->
@@ -232,6 +239,11 @@ Two caveats shape the implementation:
 
 ## Recommendation
 
+> **2026-08-20:** Partially superseded by the
+> [Addendum](#addendum-release-flow-design-2026-08-20). The PR-time `--check`
+> job is dropped and the regen moves into a label-aware release job; item 1's
+> version-bump script and the self-healing principle of item 2 survive.
+
 Pair a PR-time gate with post-merge self-healing, mirroring the changelog setup
 the repo already runs:
 
@@ -251,6 +263,10 @@ Answer format: pick a letter per question (a = recommendation), or write in your
 own ("other").
 
 ### 1. How to close the version-bump gap
+
+> **Decided (2026-08-20): a** — the diff script, running as a job in `ci.yml`.
+> Extended with one more rule: blueprint changes on a `dont-release` PR are
+> rejected outright (see [Consequences](#consequences-for-existing-workflows)).
 
 `--check` cannot detect an unbumped version (Observation 3). Something has to
 compare "which blueprint directories did this PR touch?" against "which
@@ -272,6 +288,11 @@ compare "which blueprint directories did this PR touch?" against "which
 
 ### 2. How to handle post-merge pin drift
 
+> **Decided (2026-08-20): a, amended** — the regen is folded into the release
+> job as part of a single release commit rather than a standalone
+> `registry-regen.yml`, and it is label-aware: `dont-release` merges do not
+> regen or tag. See [The release flow](#the-release-flow).
+
 Squash merge orphans the pin every time (Observation 5).
 
 - **a (Recommended):** Add `registry-regen.yml` — auto-sync on push to `main`
@@ -287,6 +308,12 @@ Squash merge orphans the pin every time (Observation 5).
 
 ### 3. Where the registry check should live
 
+> **Decided (2026-08-20): b** — the version-bump gate runs as a job in the
+> existing `ci.yml`. The PR-time `--check` job is dropped entirely: the release
+> job owns `registry.hcl`, and authors never run `forge registry update` again
+> (a `--check` on PRs would fail for every author following the new workflow).
+> No `registry.yml` is created.
+
 - **a (Recommended):** A new `registry.yml` workflow, matching the existing
   one-concern-per-file layout (`changelog.yml`, `pr-labels.yml`,
   `trufflehog.yml`).
@@ -297,6 +324,9 @@ Squash merge orphans the pin every time (Observation 5).
   with metadata hygiene.
 
 ### 4. Whether to pursue an upstream forge change
+
+> **Decided (2026-08-20): a** — file the upstream issue describing the
+> squash/rebase failure mode; nothing here blocks on it.
 
 The pin is a commit SHA, which is what makes it fragile under history rewrites.
 A content hash of the blueprint directory would be immune to squash, rebase, and
@@ -313,6 +343,11 @@ cherry-pick alike.
 
 ### 5. Scope of the first implementation
 
+> **Decided (2026-08-20): a** — moot in the amended design: the gate and the
+> regen ship together because the regen is not a separate workflow any more. One
+> PR delivers the `ci.yml` jobs, the rewritten `release.yml`, the label rename,
+> and the `cliff.toml` changes.
+
 - **a (Recommended):** Ship the PR check and the auto-sync workflow together.
   They are complementary — the check without auto-sync means a red `main` after
   every squash merge, which trains people to ignore it.
@@ -320,6 +355,168 @@ cherry-pick alike.
   if warranted.
 - c: Auto-sync first (it removes existing pain immediately), add the PR gate
   once the noise is gone.
+
+## Addendum: release-flow design (2026-08-20)
+
+Follow-up research after review set the direction: the version-bump gate runs as
+a `ci.yml` job, changelog entries carry the blueprint as their scope, and the
+regen is label-aware so that `dont-release` merges produce neither a tag nor a
+regen — letting the repo's version tags serve as the registry's version. The
+remaining question was whether replacing `pr-semver-bump` required custom code
+(~20 lines of bash, or a reusable custom action). It does not: an existing
+action fits (Observation 10). Each open question above carries its **Decided**
+line; the evidence is below.
+
+### Observation 7: squash commit subjects broke the changelog
+
+The changelog's raw material is the squash commit subject, which GitHub takes
+from the **PR title** — branch commits are destroyed. Two releases have already
+fallen victim:
+
+```console
+$ git log --format=%s v0.1.2..v0.1.4 | grep -v changelog
+Chore/reg bump (#26)
+Fix/std rm go (#25)
+```
+
+Neither parses as a conventional commit, so git-cliff skips both, the release
+sections render empty and are dropped — v0.1.3 and v0.1.4 are absent from
+`CHANGELOG.md` entirely.
+
+Consequence: any commit-message convention, including a blueprint scope, is
+enforceable only as a **PR title lint**. `amannn/action-semantic-pull-request`
+(1.4k stars, active) does exactly this as a `ci.yml` job. With titles like
+`feat(go/std): add lint target`, a `cliff.toml` parser placed ahead of the
+generic rules routes blueprint changes to their own group:
+
+```toml
+{ message = "^[a-z]+\\((go|rust)/[a-z0-9-]+\\)", group = "Blueprint Changes" },
+```
+
+rendering as `*(go/std)* Add lint target` under **Blueprint Changes**.
+
+### Observation 8: pr-semver-bump cannot tag a commit created mid-run
+
+The release design requires tagging a commit the workflow itself creates (the
+release commit carrying `registry.hcl` + `CHANGELOG.md`).
+`jefflinse/pr-semver-bump` hardcodes the tag target to the _triggering_ commit —
+`version.js`'s `createRelease()` passes `object: process.env.GITHUB_SHA` — so it
+can only ever tag the squash-merge commit. No input overrides it. The action has
+to be replaced, not reconfigured.
+
+### Observation 9: `git-cliff --tag` dissolves the ordering cycle
+
+The apparent circularity — the changelog needs the tag name, but the tag should
+point at the commit containing the changelog — is solved by `--tag`, which
+generates the changelog _as if_ the tag existed:
+
+```console
+$ git-cliff --tag v0.2.0 -o CHANGELOG.md    # tag does not exist yet
+## [0.2.0] - 2026-08-20                     # ← named section, no [unreleased]
+```
+
+Verified on this repo. Compute the next version, generate the changelog, commit,
+then tag that commit. No second git-cliff run, and `main` and the tag point at
+identical trees.
+
+### Observation 10: an existing action fits — haya14busa/action-bumpr
+
+Survey of semver-bump actions against the two required properties: bump level
+read from **PR labels**, and the ability to tag a **commit created during the
+same run**:
+
+| Action                             | Label-driven     | Tags mid-run commit    | Verdict            |
+| ---------------------------------- | ---------------- | ---------------------- | ------------------ |
+| `jefflinse/pr-semver-bump`         | yes              | no — `GITHUB_SHA` only | replace            |
+| `haya14busa/action-bumpr`          | yes              | **yes — tags `HEAD`**  | **use**            |
+| `mathieudutour/github-tag-action`  | no (commit msgs) | yes (`commit_sha`)     | wrong driver       |
+| `rymndhng/release-on-push-action`  | yes              | no                     | no                 |
+| `K-Phoen/semver-release-action`    | yes              | no                     | no, stale          |
+| `zwaldowski/semver-release-action` | yes              | —                      | archived           |
+| `actions-ecosystem/*`              | yes (composable) | —                      | node12, stale      |
+| `intuit/auto`                      | yes              | yes                    | replaces git-cliff |
+
+`action-bumpr` (composite shell action, auditable, active 2025) has exactly the
+right mechanics, verified in its `entrypoint.sh`:
+
+- On push to `main` it finds the merged PR via `merge_commit_sha == GITHUB_SHA`,
+  reads its labels, and computes the next version from the latest reachable tag.
+  `GITHUB_SHA` stays pinned to the squash commit for the whole run, so the
+  lookup still works after the workflow pushes new commits.
+- It tags with a bare `git tag -a "${NEXT_VERSION}"` — **the workspace `HEAD`**,
+  not `GITHUB_SHA`. Create the release commit first and the tag lands on it.
+  This is the property no other label-driven action has.
+- `dry_run: true` emits `next_version` / `skip` outputs without tagging — the
+  first phase of the two-phase flow, and the value `git-cliff --tag` needs.
+- A merged PR with no `bump:*` label yields `skip=true` and exits cleanly —
+  `dont-release` semantics for free.
+- It comments the released version back on the merged PR.
+
+The one cost: bump labels are **hardcoded** as `bump:major` / `bump:minor` /
+`bump:patch`. Adopting it means renaming the three semver labels (a one-time
+`gh label rename` plus `pr-labels.yml` and docs updates); `dont-release` can
+stay, functioning as "no bump label attached". Given the alternative is writing
+and maintaining bespoke code, the rename is cheap — no custom action needs to
+exist.
+
+### The release flow
+
+One workflow (`release.yml`, rewritten), one release commit, one tag:
+
+```text
+squash-merge to main
+  │  guard: head commit is not chore(release)
+  ▼
+1. action-bumpr (dry_run) ─► skip? ─► stop          [dont-release]
+  │           └─ next_version = vX.Y.Z
+2. forge registry update                    # heal squash-orphaned pins
+3. git-cliff --tag vX.Y.Z -o CHANGELOG.md
+4. commit "chore(release): vX.Y.Z"          # registry.hcl + CHANGELOG.md
+5. push main
+6. action-bumpr (real) ─► tags HEAD = release commit, comments on PR
+```
+
+Properties:
+
+- The tagged commit contains its own changelog section and the corrected pins —
+  a consumer resolving the tag gets correct SHAs, which is what lets repo tags
+  act as the registry's version.
+- Pin-safe by Observations 2 and 4: `registry.hcl` and `CHANGELOG.md` are
+  repo-root files outside every `<bpPath>/` filter, so the release commit does
+  not re-stale the pins it just wrote.
+- `dont-release` merges leave no tag and no regen. Their commits appear in the
+  _next_ release's changelog section, which is where Keep a Changelog wants them
+  anyway.
+- The release-commit push re-triggers the workflow once; the `chore(release)`
+  guard stops it (and bumpr's PR lookup would find no PR and skip anyway).
+
+### Consequences for existing workflows
+
+- `release.yml` — rewritten as above; `pr-semver-bump` retired.
+- `changelog.yml` (PR drift check) — **retired**. The changelog regenerates at
+  release, so PRs no longer carry changelog commits at all. This also removes
+  the recurring failure where `main` moving underneath a branch fails the drift
+  check.
+- `changelog-regen.yml` — **retired**, folded into the release job.
+- `ci.yml` — gains two jobs: the version-bump gate script and the PR title lint
+  (Observation 7).
+- Authors stop running `forge registry update` entirely; the release job owns
+  `registry.hcl`, and no `--check` runs on PRs.
+- `pr-labels.yml` — required-label set becomes `bump:major` / `bump:minor` /
+  `bump:patch` / `dont-release`.
+- `cliff.toml` — add the blueprint-scope group (Observation 7), and broaden the
+  skip rule `^chore\(release\): prepare for` to `^chore\(release\)` so release
+  commits stay out of the next release's section.
+- The gate also **rejects blueprint changes on `dont-release` PRs** — otherwise
+  a blueprint edit would merge with no regen and no tag, leaving `blueprint.hcl`
+  ahead of `registry.hcl` until the next release.
+
+One known gap is carried forward, not solved here: edits under `_defaults/`
+change scaffold output for every blueprint in the category but live outside each
+`<bpPath>/` filter — the pins never notice, and the gate as scoped above would
+not demand a bump. Whether a `_defaults/` change should force a bump of every
+blueprint in its category is an IMPL-doc decision (the batch
+`/blueprint-bump-version` skill makes it cheap either way).
 
 ## References
 
@@ -331,3 +528,10 @@ cherry-pick alike.
 - `.github/workflows/changelog-regen.yml` / `changelog.yml` — the drift-check +
   auto-sync pattern this proposal mirrors
 - forge#43 — the var-file object fix shipped in v0.8.1
+- [haya14busa/action-bumpr](https://github.com/haya14busa/action-bumpr) —
+  `entrypoint.sh` verified for the tag-`HEAD` and label-grep behavior
+- [jefflinse/pr-semver-bump](https://github.com/jefflinse/pr-semver-bump) —
+  `version.js` `createRelease()` pins the tag to `GITHUB_SHA`
+- [amannn/action-semantic-pull-request](https://github.com/amannn/action-semantic-pull-request)
+  — PR title lint enforcing conventional squash subjects
+- v0.1.3 / v0.1.4 — the two releases missing from `CHANGELOG.md` (Observation 7)
