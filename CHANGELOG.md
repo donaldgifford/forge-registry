@@ -9,6 +9,7 @@ this project adheres to [Semantic Versioning](https://semver.org/).
 ### Documentation
 
 - *(inv-0002)* Investigate CI enforcement of version bumps and registry sync
+- *(inv-0002)* Fold in release-flow decisions and semver-action survey
 
 ## [0.1.2] - 2026-08-19
 
