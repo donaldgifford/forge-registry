@@ -39,6 +39,9 @@ created: 2026-08-19
   - [Observation 10: an existing action fits — haya14busa/action-bumpr](#observation-10-an-existing-action-fits--haya14busaaction-bumpr)
   - [The release flow](#the-release-flow)
   - [Consequences for existing workflows](#consequences-for-existing-workflows)
+- [Addendum 2: fork vs. scratch (2026-08-23)](#addendum-2-fork-vs-scratch-2026-08-23)
+  - [Observation 11: the fork delta is small — the ownership is not](#observation-11-the-fork-delta-is-small--the-ownership-is-not)
+  - [Decision: scratch-build pr-semver-tag as a composite action](#decision-scratch-build-pr-semver-tag-as-a-composite-action)
 - [References](#references)
 
 <!--toc:end-->
@@ -421,6 +424,12 @@ identical trees.
 
 ### Observation 10: an existing action fits — haya14busa/action-bumpr
 
+> **2026-08-23:** Verdict superseded by
+> [Addendum 2](#addendum-2-fork-vs-scratch-2026-08-23). The survey stands, but
+> the adoption call flipped: rather than pay `action-bumpr`'s label-rename cost
+> and own an external dependency, the same ~100 lines are built in-repo.
+> `action-bumpr` remains the architectural reference (MIT).
+
 Survey of semver-bump actions against the two required properties: bump level
 read from **PR labels**, and the ability to tag a **commit created during the
 same run**:
@@ -461,6 +470,10 @@ exist.
 
 ### The release flow
 
+> **2026-08-23:** Shape unchanged; steps 1 and 6 are now the in-repo
+> `pr-semver-tag` action (`mode: compute` / `mode: tag`) instead of
+> `action-bumpr` — see [Addendum 2](#addendum-2-fork-vs-scratch-2026-08-23).
+
 One workflow (`release.yml`, rewritten), one release commit, one tag:
 
 ```text
@@ -487,10 +500,16 @@ Properties:
 - `dont-release` merges leave no tag and no regen. Their commits appear in the
   _next_ release's changelog section, which is where Keep a Changelog wants them
   anyway.
-- The release-commit push re-triggers the workflow once; the `chore(release)`
-  guard stops it (and bumpr's PR lookup would find no PR and skip anyway).
+- The release-commit push cannot re-trigger the workflow at all — pushes made
+  with the default `GITHUB_TOKEN` never start new runs. The `chore(release)`
+  guard is belt-and-braces on top of that.
 
 ### Consequences for existing workflows
+
+> **2026-08-23:** The `pr-labels.yml` bullet below is void — the scratch-built
+> action keeps `major` / `minor` / `patch` / `dont-release` as-is
+> ([Addendum 2](#addendum-2-fork-vs-scratch-2026-08-23)). Everything else
+> stands.
 
 - `release.yml` — rewritten as above; `pr-semver-bump` retired.
 - `changelog.yml` (PR drift check) — **retired**. The changelog regenerates at
@@ -517,6 +536,83 @@ change scaffold output for every blueprint in the category but live outside each
 not demand a bump. Whether a `_defaults/` change should force a bump of every
 blueprint in its category is an IMPL-doc decision (the batch
 `/blueprint-bump-version` skill makes it cheap either way).
+
+## Addendum 2: fork vs. scratch (2026-08-23)
+
+Review direction after Addendum 1: adopting `action-bumpr` means paying its
+label-rename cost and owning an external dependency anyway — "we also take on
+those costs ourselves, and that's why we build it ourselves." The remaining
+question: fork `jefflinse/pr-semver-bump` and add the two missing inputs, or
+build the same functionality from scratch?
+
+### Observation 11: the fork delta is small — the ownership is not
+
+What a fork would actually change (both repos are MIT-licensed):
+
+- Labels are already configurable (`major-label` / `minor-label` / `patch-label`
+  / `noop-labels`) — no rename under a fork either.
+- Two new inputs close the gap: `dry-run` (skip `createRelease()`) and
+  `commit-sha` (override `object: process.env.GITHUB_SHA`). Roughly 25 lines of
+  source.
+
+What the fork owns regardless of how small the delta is:
+
+- The JS action lifecycle: `@vercel/ncc` bundles committed to `dist/` on every
+  change, npm/Dependabot churn on `@actions/*`, the jest suite, and GitHub's
+  recurring forced node runtime migrations (node12 → 16 → 20 so far).
+- Upstream's latent bugs. One was found just reading the source:
+  `getCurrentVersion()` calls `listMatchingRefs` **without pagination**, so past
+  ~100 tags the listing truncates and the computed current version can be wrong.
+  A repo that tags every merge gets there.
+
+The features that make `pr-semver-bump` ~500 lines are the ones this design does
+not use: release-notes extraction from PR bodies (git-cliff's job here) and
+`validate` mode (`pr-labels.yml` already enforces labels).
+
+### Decision: scratch-build `pr-semver-tag` as a composite action
+
+Build it as ~100 lines of shell in an in-repo composite action —
+`.github/actions/pr-semver-tag/` — cribbing `action-bumpr`'s audited
+architecture (MIT). Every mechanism it needs was verified during this
+investigation:
+
+| Piece           | Implementation                                              |
+| --------------- | ----------------------------------------------------------- |
+| Find merged PR  | `gh api repos/{repo}/commits/{GITHUB_SHA}/pulls` — one call |
+| Labels → level  | case statement over inputs; **existing label names stay**   |
+| Current version | `git tag --merged HEAD -l 'v*' \| sort -V \| tail -1`       |
+| Next version    | split on `.`, increment — pure bash                         |
+| Tag             | `git tag -a "$NEXT" [target]` — **defaults to `HEAD`**      |
+| PR comment      | `gh pr comment`                                             |
+
+Two-phase interface matching [The release flow](#the-release-flow):
+
+```yaml
+- id: ver
+  uses: ./.github/actions/pr-semver-tag
+  with:
+    mode: compute # outputs: skip, current-version, next-version
+# … forge registry update, git-cliff --tag, chore(release) commit, push …
+- uses: ./.github/actions/pr-semver-tag
+  with:
+    mode: tag # tags HEAD by default; comments the version on the PR
+```
+
+Why scratch wins over the fork:
+
+- No build step — matching this repo's no-build, lint-enforced philosophy — and
+  shellcheck + bats testing per the conventions `scripts/scaffold-smoke.sh`
+  already follows.
+- `major` / `minor` / `patch` / `dont-release` survive untouched;
+  `pr-labels.yml` does not change.
+- Current-version computation is git-only (no API pagination to get wrong), and
+  merged-only tag filtering is stricter than upstream's repo-wide default.
+- It lives in-repo first (`uses: ./…` needs no pinning or publishing); promote
+  to a standalone `donaldgifford/pr-semver-tag` repo once it has survived a few
+  real releases — promotion is a directory copy plus a `uses:` pin change, at
+  which point the forge repo can adopt it too.
+
+Implementation is specced in IMPL-0004.
 
 ## References
 
