@@ -72,7 +72,8 @@ kept.
 - `_defaults/` policy: a `_defaults/` change requires bumping every blueprint it
   feeds (category `_defaults/` → that category; root `_defaults/` → all)
 - Docs: CLAUDE.md + contributor-facing workflow docs
-- Filing the upstream forge issue for a content-hash pin (INV-0002 OQ-4)
+- Filing the upstream forge issues: content-hash pin (INV-0002 OQ-4) and
+  remote-fetch defaults (INV-0002 Addendum 3)
 
 ### Out of Scope
 
@@ -328,6 +329,10 @@ protection lists the drift check as required, drop it there too.
 - [ ] File the upstream forge issue: squash/rebase merges orphan the
       `latest_commit` pin (INV-0002 Observation 5); propose a content-hash or
       hybrid pin; link INV-0002
+- [ ] File the second forge issue (INV-0002 Addendum 3): remote fetch with no
+      ref dies on `git checkout ""` (pre-created dst forces go-getter's update
+      path); propose bare-URL normalization to the git getter plus default ref =
+      latest `v*` tag with default-branch fallback
 - [ ] Mark INV-0002 references to IMPL-0004 as landed; set this doc's status to
       Completed
 

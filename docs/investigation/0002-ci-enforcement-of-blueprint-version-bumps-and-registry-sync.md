@@ -42,6 +42,10 @@ created: 2026-08-19
 - [Addendum 2: fork vs. scratch (2026-08-23)](#addendum-2-fork-vs-scratch-2026-08-23)
   - [Observation 11: the fork delta is small — the ownership is not](#observation-11-the-fork-delta-is-small--the-ownership-is-not)
   - [Decision: scratch-build pr-semver-tag as a composite action](#decision-scratch-build-pr-semver-tag-as-a-composite-action)
+- [Addendum 3: remote-fetch defaults (2026-08-25)](#addendum-3-remote-fetch-defaults-2026-08-25)
+  - [Observation 12: remote fetch without a ref is broken](#observation-12-remote-fetch-without-a-ref-is-broken)
+  - [Observation 13: bare URLs route to the http getter](#observation-13-bare-urls-route-to-the-http-getter)
+  - [Decision: default ref = latest v* tag; normalize URLs](#decision-default-ref--latest-v-tag-normalize-urls)
 - [References](#references)
 
 <!--toc:end-->
@@ -614,6 +618,92 @@ Why scratch wins over the fork:
 
 Implementation is specced in IMPL-0004.
 
+## Addendum 3: remote-fetch defaults (2026-08-25)
+
+The first real attempt to consume a registry **remotely** (a private repo)
+failed with `git exited with 128: fatal: empty string is not a valid pathspec`.
+Diagnosis showed it is neither an auth problem nor private-specific — it
+reproduces identically against this public registry — and it surfaced a
+consumer-side QOL gap that this investigation's release design is uniquely
+positioned to close.
+
+### Observation 12: remote fetch without a ref is broken
+
+The causal chain, each step verified against forge v0.8.1 and go-getter v2.2.3
+(its latest v2):
+
+1. forge **pre-creates** the destination directory before fetching
+   (`resolveRegistrySource` uses `os.MkdirTemp`; `Cache.GetOrFetch` uses
+   `MkdirAll`).
+2. go-getter's `Get()` chooses clone-vs-update by `os.Stat(req.Dst)` — the
+   directory exists, so it always takes the **update** path. The clone path is
+   unreachable.
+3. `update()` runs `git init` → `remote add` → `fetch --tags` (auth happens
+   here, and succeeds) → `reset --hard FETCH_HEAD` → then `git checkout <ref>`
+   **unconditionally**, with `ref=""` when the URL carries no `?ref=`.
+4. Modern git (2.55 here) makes `git checkout ""` fatal:
+   `fatal: empty string is not a valid pathspec`, exit 128, which go-getter
+   wraps as `git exited with 128`.
+
+The clone path would have been safe — its checkout is guarded by `ref != ""` —
+and go-getter has no fixed release to bump to.
+
+**Verified workaround:** any explicit ref. Public and private both work:
+
+```console
+$ forge create go/std \
+    --registry-dir "git::https://github.com/<owner>/<registry>.git?ref=main"
+```
+
+Private repos need nothing else locally — https auth comes from `gh`'s
+credential helper and SSH from the agent. (A gitconfig `insteadOf` rewrite was
+suspected but turned out to be inert — `[extraConfig.url "…"]` is home-manager
+syntax, not git's `[url "…"]` — and unnecessary.) CI fetching a private registry
+would need a token; local use does not.
+
+### Observation 13: bare URLs route to the http getter
+
+The documented short form `github.com/<owner>/<repo>` (no `git::` prefix, no
+`.git` suffix) is detected as an **http** source, not git. For a private repo
+the web URL returns an unauthenticated 404, so the user sees
+`bad response code: 404` — an auth problem wearing a not-found costume. The
+`.git`-suffixed bare form tries git first (hitting Observation 12), then falls
+back to http and reports both errors.
+
+### Decision: default ref = latest v* tag; normalize URLs
+
+An upstream forge change, recorded here because it completes this
+investigation's consumer story:
+
+- **URL normalization.** `--registry-dir github.com/you/registry` should Just
+  Work: forge normalizes a bare `host/owner/repo` to the git getter form
+  (`git::https://host/owner/repo.git`), leaving explicit `git::` / `ssh://` /
+  local-path forms untouched. This retires Observation 13's http-getter
+  fallthrough for registries.
+- **Default ref.** When no ref is given, resolve the **latest `v*` tag** (one
+  `git ls-remote --tags` pre-flight, semver sort, prereleases and peeled `^{}`
+  entries excluded) and fall back to the default branch
+  (`git ls-remote --symref <url> HEAD`) when no tags exist. Explicit `@ref` /
+  `?ref=` always override.
+- **Why the tag default is right _because of this investigation_:** the release
+  flow (Addendum 1) guarantees pins are correct exactly at `v*` tags — the
+  tagged release commit carries the regenerated `registry.hcl` — while `main`'s
+  tip can be transiently stale between a merge and the release job. Defaulting
+  consumers to the latest tag means
+  `forge create go/std --registry-dir github.com/you/registry` always scaffolds
+  from a coherent release, and `go/std@v0.5.0` naturally means "registry release
+  v0.5.0". Tags-as-registry-version stops being a convention and becomes the
+  default consumption model.
+- Resolving the ref before fetch also makes the cache meaningful
+  (`cacheMeta.Ref` is currently `""` for default fetches) and incidentally
+  guarantees the ref is never empty — though the dst-exists bug (Observation 12)
+  should be fixed regardless, by pointing go-getter at a not-yet-existing
+  subdirectory so the clone path runs.
+
+Scope check: this is a contained forge change — a normalize function, an
+ls-remote pre-flight with a semver sort, and two call-site fixes — filed as a
+forge issue alongside the content-hash pin proposal (IMPL-0004 Phase 4).
+
 ## References
 
 - [INV-0001](0001-migrate-remaining-blueprints-to-forge-v08-variable-syntax-and.md)
@@ -631,3 +721,9 @@ Implementation is specced in IMPL-0004.
 - [amannn/action-semantic-pull-request](https://github.com/amannn/action-semantic-pull-request)
   — PR title lint enforcing conventional squash subjects
 - v0.1.3 / v0.1.4 — the two releases missing from `CHANGELOG.md` (Observation 7)
+- [go-getter v2.2.3 `get_git.go`](https://github.com/hashicorp/go-getter/blob/v2.2.3/get_git.go)
+  — `Get()` clone-vs-update on `os.Stat(dst)`; `update()`'s unguarded
+  `git checkout <ref>` (Observation 12)
+- forge `internal/getter` / `cmd/create.go` `resolveRegistrySource` /
+  `internal/registry/cache.go` @ `v0.8.1` — the pre-created destination and the
+  unused `RegistryConfig.Ref` (Observation 12)
