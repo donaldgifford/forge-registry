@@ -331,8 +331,10 @@ protection lists the drift check as required, drop it there too.
       hybrid pin; link INV-0002
 - [ ] File the second forge issue (INV-0002 Addendum 3): remote fetch with no
       ref dies on `git checkout ""` (pre-created dst forces go-getter's update
-      path); propose bare-URL normalization to the git getter plus default ref =
-      latest `v*` tag with default-branch fallback
+      path); propose `owner/repo` defaulting to github.com behind `--git-host` /
+      `--git-host-type` flags (defaults `github.com` / `github`, so today's
+      commands don't change), normalization to the git getter form, and default
+      ref = latest `v*` tag with default-branch fallback
 - [ ] Mark INV-0002 references to IMPL-0004 as landed; set this doc's status to
       Completed
 

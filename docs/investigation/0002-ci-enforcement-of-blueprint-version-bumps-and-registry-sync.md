@@ -675,11 +675,24 @@ back to http and reports both errors.
 An upstream forge change, recorded here because it completes this
 investigation's consumer story:
 
-- **URL normalization.** `--registry-dir github.com/you/registry` should Just
-  Work: forge normalizes a bare `host/owner/repo` to the git getter form
-  (`git::https://host/owner/repo.git`), leaving explicit `git::` / `ssh://` /
-  local-path forms untouched. This retires Observation 13's http-getter
-  fallthrough for registries.
+- **Default host, not host guessing.** The short form gets shorter:
+  `--registry-dir you/registry` assumes **github.com**. Two flags make the host
+  explicit instead of inferred from URL shape:
+  - `--git-host` (default `github.com`) — the host to prepend to a bare
+    `owner/repo`. `gitlab.com` is a known value, tracked for completeness only;
+    github is the only host that matters today.
+  - `--git-host-type` (default `github`) — names the host flavor so
+    host-specific behavior has somewhere to live later (forgejo, gitlab) without
+    changing today's commands. With the defaults, every command that works now
+    keeps working unchanged.
+
+  Resolution order: an existing local path wins (current behavior); explicit
+  `git::` / `ssh://` / `https://` forms pass through untouched; a dotted first
+  segment (`git.fartlab.dev/owner/repo`) is treated as `host/owner/repo`; a bare
+  `owner/repo` gets `--git-host` prepended. The normalized result is always the
+  git getter form (`git::https://host/owner/repo.git`), which retires
+  Observation 13's http-getter fallthrough for registries.
+
 - **Default ref.** When no ref is given, resolve the **latest `v*` tag** (one
   `git ls-remote --tags` pre-flight, semver sort, prereleases and peeled `^{}`
   entries excluded) and fall back to the default branch
@@ -690,8 +703,8 @@ investigation's consumer story:
   tagged release commit carries the regenerated `registry.hcl` — while `main`'s
   tip can be transiently stale between a merge and the release job. Defaulting
   consumers to the latest tag means
-  `forge create go/std --registry-dir github.com/you/registry` always scaffolds
-  from a coherent release, and `go/std@v0.5.0` naturally means "registry release
+  `forge create go/std --registry-dir you/registry` always scaffolds from a
+  coherent release, and `go/std@v0.5.0` naturally means "registry release
   v0.5.0". Tags-as-registry-version stops being a convention and becomes the
   default consumption model.
 - Resolving the ref before fetch also makes the cache meaningful
@@ -700,9 +713,10 @@ investigation's consumer story:
   should be fixed regardless, by pointing go-getter at a not-yet-existing
   subdirectory so the clone path runs.
 
-Scope check: this is a contained forge change — a normalize function, an
-ls-remote pre-flight with a semver sort, and two call-site fixes — filed as a
-forge issue alongside the content-hash pin proposal (IMPL-0004 Phase 4).
+Scope check: this is a contained forge change — a normalize function keyed by
+two defaulted flags, an ls-remote pre-flight with a semver sort, and two
+call-site fixes — filed as a forge issue alongside the content-hash pin proposal
+(IMPL-0004 Phase 4).
 
 ## References
 
