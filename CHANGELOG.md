@@ -13,6 +13,7 @@ this project adheres to [Semantic Versioning](https://semver.org/).
 - *(inv-0002)* Decide fork-vs-scratch — build pr-semver-tag in-repo
 - *(impl-0004)* Spec registry release automation
 - *(inv-0002)* Addendum 3 — remote-fetch defaults and the empty-ref bug
+- *(inv-0002)* Default git host to github.com behind explicit flags
 
 ## [0.1.2] - 2026-08-19
 
