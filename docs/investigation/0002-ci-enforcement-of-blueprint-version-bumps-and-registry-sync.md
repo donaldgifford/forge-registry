@@ -715,8 +715,9 @@ investigation's consumer story:
 
 Scope check: this is a contained forge change — a normalize function keyed by
 two defaulted flags, an ls-remote pre-flight with a semver sort, and two
-call-site fixes — filed as a forge issue alongside the content-hash pin proposal
-(IMPL-0004 Phase 4).
+call-site fixes — filed 2026-08-26 as
+[forge#44](https://github.com/donaldgifford/forge/issues/44); the content-hash
+pin proposal remains a separate IMPL-0004 Phase 4 task.
 
 ## References
 
@@ -741,3 +742,5 @@ call-site fixes — filed as a forge issue alongside the content-hash pin propos
 - forge `internal/getter` / `cmd/create.go` `resolveRegistrySource` /
   `internal/registry/cache.go` @ `v0.8.1` — the pre-created destination and the
   unused `RegistryConfig.Ref` (Observation 12)
+- [forge#44](https://github.com/donaldgifford/forge/issues/44) — the Addendum 3
+  bug + features, filed upstream
