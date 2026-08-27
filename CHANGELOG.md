@@ -4,6 +4,18 @@ All notable changes to this project are documented here. The format is
 based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and
 this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [unreleased]
+
+### Documentation
+
+- *(inv-0002)* Investigate CI enforcement of version bumps and registry sync
+- *(inv-0002)* Fold in release-flow decisions and semver-action survey
+- *(inv-0002)* Decide fork-vs-scratch — build pr-semver-tag in-repo
+- *(impl-0004)* Spec registry release automation
+- *(inv-0002)* Addendum 3 — remote-fetch defaults and the empty-ref bug
+- *(inv-0002)* Default git host to github.com behind explicit flags
+- *(inv-0002)* Link forge#44 — Addendum 3 filed upstream
+
 ## [0.1.2] - 2026-08-19
 
 ### Bug Fixes
