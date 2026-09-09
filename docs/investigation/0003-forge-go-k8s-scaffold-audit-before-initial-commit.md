@@ -38,6 +38,13 @@ created: 2026-09-08
   - [A. This repo, before git init](#a-this-repo-before-git-init)
   - [B. forge-registry, go/k8s blueprint and shared defaults](#b-forge-registry-gok8s-blueprint-and-shared-defaults)
   - [C. Variable model and catalog template](#c-variable-model-and-catalog-template)
+- [Addendum: registry source and blast radius (2026-09-09)](#addendum-registry-source-and-blast-radius-2026-09-09)
+  - [Method](#method)
+  - [Source map by observation](#source-map-by-observation)
+  - [Corrections to the observations above](#corrections-to-the-observations-above)
+  - [Additional findings from the registry sweep](#additional-findings-from-the-registry-sweep)
+  - [Blast-radius summary](#blast-radius-summary)
+  - [Sequencing](#sequencing)
 - [References](#references)
 
 <!--toc:end-->
@@ -600,6 +607,211 @@ wins:
   targets it) or gate `backstage.io/techdocs-ref` on an `enable_techdocs` flag.
   Today the annotation points at a docs build that does not exist until
   `docz wiki init` runs.
+
+## Addendum: registry source and blast radius (2026-09-09)
+
+The audit above was written from inside one rendered tree, so it could only say
+"blueprint bug" without knowing which registry file produced each line. This
+addendum maps every finding to its source in forge-registry at `2c186e4` and
+answers the question the doc was copied here for: which findings are
+`go/k8s`-specific and which are shared defaults that every forged repo inherits.
+Tracking issue:
+[forge-registry#28](https://github.com/donaldgifford/forge-registry/issues/28).
+
+### Method
+
+Forge layers three levels and the last one wins: registry `_defaults/`, then
+`<category>/_defaults/`, then `<category>/<blueprint>/`. A finding is
+`go/k8s`-specific only when the file exists under `go/k8s/` and nowhere else.
+Files without a `.tmpl` suffix are copied verbatim and never rendered.
+
+The sweep was `grep -rn` over the tree for `project_owner`, `git_provider.org`,
+`issues/$`, the leaked strings from Observation 5, `CODEOWNERS`, the labeler
+`feature` key, `project_component_type`, and every directory named
+`${project_name}`. Blueprint-level `docs/` directories were included (an earlier
+pass excluded them and missed one hit).
+
+### Source map by observation
+
+**Observation 1, owner misuse.** Rendered file, registry source, and who
+inherits it:
+
+| Rendered file                       | Registry source (line)                                                                                                                             | Reaches                                         |
+| ----------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- |
+| `go.mod`                            | `go/k8s/go.mod.tmpl:1` overrides a correct `go/_defaults/go.mod.tmpl:1`                                                                            | go/k8s only                                     |
+| `CLAUDE.md`                         | `go/k8s/CLAUDE.md.tmpl:3` overrides a correct `go/_defaults/CLAUDE.md.tmpl:3`                                                                      | go/k8s only                                     |
+| `justfile`                          | `go/k8s/justfile.tmpl:16,17,22`; same in `go/_defaults/justfile.tmpl:14,15,20`, `bun/_defaults/justfile.tmpl:9,10,15`, `_defaults/justfile.tmpl:9` | all go, bun, and every non-overriding blueprint |
+| `.golangci.yml`                     | `go/_defaults/.golangci.yml.tmpl:287,294` (also literal `github.com`)                                                                              | all 6 go                                        |
+| `.goreleaser.yml`                   | `go/k8s/.goreleaser.yml.tmpl:75,87,88,93`; `go/_defaults/.goreleaser.yml.tmpl:80,100`                                                              | go/k8s; all 6 go                                |
+| `cliff.toml`                        | `go/k8s:37,78`, `go/_defaults:33,74`, `go/ext:37,77`, `go/kubebuilder:37,77`, `bun/_defaults:37,78` (each `cliff.toml.tmpl`)                       | all 6 go, bun                                   |
+| `charts/<name>/cliff.toml`          | `go/k8s/charts/${project_name}/cliff.toml.tmpl:40,80`                                                                                              | go/k8s only                                     |
+| `docker-bake.hcl`                   | `go/k8s:13,53`, `go/docker:13,43`, `go/ext:13,43`, `bun/std:13,43` (each `docker-bake.hcl.tmpl`)                                                   | 4 blueprints                                    |
+| chart `values.yaml`, tests, gotmpl  | `go/k8s/charts/${project_name}/{values.yaml.tmpl:12, tests/deployment_test.yaml.tmpl:26,34, README.md.gotmpl.tmpl:16}`                             | go/k8s only                                     |
+| `helm.just`                         | `go/k8s/helm.just.tmpl:11,102`                                                                                                                     | go/k8s only                                     |
+| `README.md`                         | `go/k8s/README.md.tmpl:63`                                                                                                                         | go/k8s only                                     |
+| `.github/ISSUE_TEMPLATE/config.yml` | `go/k8s/.github/ISSUE_TEMPLATE/config.yml.tmpl:5`                                                                                                  | go/k8s only                                     |
+| `.github/dependabot.yml`            | `go/_defaults/.github/dependabot.yml.tmpl:23,39,55`; `bun/_defaults/.github/dependabot.yml:23,39,55` (no `.tmpl`, see below)                       | all 6 go; bun                                   |
+| `docs/publishing-to-ecr.md`         | `go/k8s/docs/publishing-to-ecr.md.tmpl:27` (missed above; in #28)                                                                                  | go/k8s only                                     |
+| `LICENSE`                           | `go/k8s/LICENSE.tmpl:207,230`, the one legitimate use (copyright holder)                                                                           | go/k8s only                                     |
+
+The registry-level `_defaults/cliff.toml.tmpl:34,75` is correct
+(`${git_provider.host}/${git_provider.org}`) and is overridden by every category
+and blueprint copy listed above. The bug is invisible by default because
+`go/k8s/blueprint.hcl:87-88` sets the object default `org = project_owner` on
+purpose ("`org` still tracks `project_owner`"), so the two only diverge when the
+operator supplies `git_provider` explicitly.
+
+**Observation 2, name literals.** `/${project_name}` in `.gitignore` comes from
+`go/_defaults/.gitignore.tmpl:9` (all 6 go), `go/k8s/.gitignore.tmpl:8`,
+`go/docker/.gitignore.tmpl:43`, and `homelab/go/.gitignore:11`. The chart
+yamllint ignore is `go/k8s/charts/.yamllint.yml.tmpl:19` and
+`bun/std/charts/.yamllint.yml.tmpl:20`.
+
+**Observation 3, stale directories.** Forge behaviour. Variable-named
+directories exist at `go/_defaults/cmd/${project_name}/` (all 6 go),
+`go/k8s/charts/${project_name}/`, and `homelab/go/cmd/${project_name}/`, so any
+go blueprint reproduces it on an in-place rename.
+
+**Observation 4, `${2}` escaping.** Unescaped in three templates:
+`go/ext/cliff.toml.tmpl:55`, `go/kubebuilder/cliff.toml.tmpl:55`, and
+`go/k8s/charts/${project_name}/cliff.toml.tmpl:58`. Correct (`$${2}`) in
+`_defaults:52`, `bun/_defaults:55`, `go/_defaults:51`, and
+`go/k8s/cliff.toml.tmpl:55`. Three blueprints, not one.
+
+**Observation 5, leaked text.** The docz branch examples are
+`_defaults/CONTRIBUTING.md.tmpl:47-48`, registry-wide. The oapi-codegen link is
+`go/_defaults/.github/workflows/security.yml:25`, repeated verbatim in
+`go/ext/.github/workflows/security.yml:25` and
+`bun/_defaults/.github/workflows/security.yml:25`. `IMPL-0021` is
+`go/k8s/mise.toml.tmpl:14` only.
+
+**Observation 6, stale instructions.** `mkdir -p cmd` is
+`go/k8s/README.md.tmpl:18` only. The PR-template chart wording is
+`go/k8s/.github/PULL_REQUEST_TEMPLATE.md:11` only. The `CODEOWNERS` CHANGEME
+comment plus hardcoded `* @donaldgifford` is in `_defaults`, `go/_defaults`, and
+`bun/_defaults` (`.github/CODEOWNERS:4-5`); `rust/_defaults` has the hardcoded
+line without the comment; the registry's own `.github/CODEOWNERS` matches. The
+labeler `feature` pattern is `_defaults/.github/labeler.yml:38-39`,
+`go/_defaults:42-43`, `bun/_defaults:42-43`, `go/k8s:59-60`, and the registry's
+own `.github/labeler.yml:38-39`.
+
+**Observation 7, catalog defaults.** `project_component_type` is
+`required = true` with no default in all eleven blueprints that declare it
+(`bun/std`, `go/{cli,docker,ext,k8s,kubebuilder,std}`, `rust/{esp32,std}`,
+`std/{docs,new}`). The eight homelab blueprints do not declare it and render
+`spec.owner` from `git_provider.org`
+(`homelab/_defaults/catalog-info.yaml.tmpl:17`).
+
+**Observation 8, name equals repo name.** `go/k8s` only. The chart-aware release
+workflows are `go/k8s/.github/workflows/release-{ghcr,ecr}.yml`; the category
+`go/_defaults/.github/workflows/release.yml` has no chart logic.
+
+**Observation 9, lock and settings.** The lock items are forge behaviour
+(`.forge-lock.hcl` is written by forge); the hash-less `main.go.tmpl` comes from
+`go/_defaults/cmd/${project_name}/`. `_defaults`, `go/_defaults`, and
+`bun/_defaults` `.claude/settings.json` enable both
+`ralph-loop@claude-plugins-official` and
+`donald-loop@donaldgifford-claude-skills`; `rust/_defaults` enables `ralph-loop`
+only.
+
+### Corrections to the observations above
+
+1. **Observation 1, second table.** `.github/CODEOWNERS` is not rendered from
+   `git_provider.org`. It is an un-templated file with a literal
+   `* @donaldgifford` at every level that ships it. It looked correct only
+   because the operator is `donaldgifford`. Two files in the `go/k8s` render use
+   `git_provider.org`, not three: `catalog-info.yaml` and `CONTRIBUTING.md`.
+2. **Observation 9, marketplace.** `docker` and `donald-loop` both exist in the
+   `donaldgifford-claude-skills` marketplace (30 plugins in its
+   `marketplace.json`, both present in the local plugin cache). Nothing to
+   prune. The real oddity is enabling `ralph-loop` and its fork `donald-loop` at
+   the same time.
+3. **Observation 7.** `type: cli` was not a blueprint default. The variable has
+   no default anywhere, so the value came from the operator's variables file.
+   The repo fix stands; the blueprint fix is adding per-blueprint defaults (#28
+   item 5).
+4. **Observation 1 missed one file.** `docs/publishing-to-ecr.md:27` builds the
+   OIDC trust subject `repo:<owner>/<name>` from `project_owner`. Caught in #28.
+5. **Observation 4's proposed guard** (diff the root and chart cliff configs) is
+   too narrow now that three blueprints are affected. A registry-wide render
+   check that fails on `issues/2)` in any rendered `cliff.toml` covers all of
+   them.
+
+### Additional findings from the registry sweep
+
+1. **Un-templated files carrying forge syntax.**
+   `bun/_defaults/.github/dependabot.yml` contains `${project_owner}` three
+   times but has no `.tmpl` suffix, so every bun render ships a literal
+   `${project_owner}` as a dependabot assignee. `homelab/go/.gitignore:11` ships
+   a literal `/${project_name}` the same way.
+2. **A whole chart lifted from `repo-guardian`.** `bun/std/charts/temp/` is 16
+   tracked, un-templated files (`Chart.yaml`, `values.yaml`,
+   `values.schema.json`, eight templates, `README.md.gotmpl`, `cliff.toml`) with
+   `donaldgifford/repo-guardian` and
+   `ghcr.io/donaldgifford/charts/repo-guardian` hardcoded, and a README that
+   cites that repo's `INV-0005`. `bun/std/blueprint.hcl` has no rename or sync
+   rule for `charts`, so it ships verbatim. Either template it as
+   `charts/${project_name}/` the way `go/k8s` does, or delete it.
+3. **Dead file with the same leak.** `go/ext/charts/.yamllint.yml.tmpl:19`
+   ignores `charts/repo-guardian/templates/`; `go/ext` has no chart directory.
+4. **Wrong host claim in the go category.** `go/_defaults/CLAUDE.md.tmpl:16`
+   says the repo "Lives on Forgejo" with a `.github/workflows/` mirror. The go
+   category is GitHub-pinned; the line is identical to
+   `homelab/go/CLAUDE.md.tmpl:16`, where it is true.
+
+### Blast-radius summary
+
+| Finding                                                                                      | Source level         | Blueprints affected                       |
+| -------------------------------------------------------------------------------------------- | -------------------- | ----------------------------------------- |
+| Obs 1: `.golangci.yml`, `.goreleaser.yml`, `cliff.toml`, `justfile`, `dependabot.yml`        | category             | 7 (all go, bun)                           |
+| Obs 1: `docker-bake.hcl`                                                                     | blueprint            | 4 (go/k8s, go/docker, go/ext, bun/std)    |
+| Obs 1: `go.mod` and `CLAUDE.md` overrides, chart, `helm.just`, README, issue config, ECR doc | blueprint            | 1 (go/k8s)                                |
+| Obs 1: `_defaults/justfile.tmpl`                                                             | registry             | every blueprint without its own justfile  |
+| Obs 2: name literals                                                                         | category + blueprint | all go, bun/std, homelab/go               |
+| Obs 3: stale directories on rename                                                           | forge                | all go, homelab/go                        |
+| Obs 4: unescaped `${2}`                                                                      | blueprint            | 3 (go/ext, go/kubebuilder, go/k8s chart)  |
+| Obs 5: CONTRIBUTING docz examples                                                            | registry             | all 19                                    |
+| Obs 5: oapi-codegen link                                                                     | category + blueprint | 7 (all go, bun)                           |
+| Obs 5: `IMPL-0021` comment                                                                   | blueprint            | 1 (go/k8s)                                |
+| Obs 6: CODEOWNERS hardcoded owner and comment                                                | registry + category  | all 19                                    |
+| Obs 6: labeler `feature` pattern                                                             | registry + category  | all 19                                    |
+| Obs 6: README `mkdir`, PR template                                                           | blueprint            | 1 (go/k8s)                                |
+| Obs 7: catalog variables without defaults                                                    | blueprint schema     | 11                                        |
+| Obs 8: `project_name == repo name` invariant                                                 | blueprint            | 1 (go/k8s)                                |
+| Obs 9: lock gaps                                                                             | forge                | all                                       |
+| Obs 9: `ralph-loop` plus `donald-loop`                                                       | registry + category  | all except rust                           |
+| New: un-templated forge syntax                                                               | category + blueprint | bun (dependabot), homelab/go (.gitignore) |
+| New: `repo-guardian` chart and yamllint leak                                                 | blueprint            | bun/std, go/ext                           |
+
+So the `go/k8s`-only findings are the `go.mod` and `CLAUDE.md` overrides, the
+chart files, `helm.just`, the README, the issue-template config, the ECR doc,
+the PR template, the `mise.toml` comment, and the release-train invariant.
+Everything else in the audit is a shared default and ships with every go and bun
+repo, or with all nineteen blueprints.
+
+### Sequencing
+
+1. **IMPL-0004 first.** The fix PRs below touch `_defaults/`, `go/_defaults/`,
+   and `bun/_defaults/`, so each one must bump every affected blueprint's
+   version. The bump gate from IMPL-0004 Phase 2 makes that mechanical and the
+   release flow tags the result.
+2. **Registry fixes in three PRs, grouped by blast radius**, each bumping the
+   blueprints it reaches:
+   - registry `_defaults`: CONTRIBUTING examples, CODEOWNERS, labeler,
+     `justfile.tmpl`, `settings.json`;
+   - category defaults (`go/_defaults`, `bun/_defaults`): owner to
+     `git_provider`, dependabot `.tmpl` suffix, `security.yml` comment,
+     `cliff.toml`, `.goreleaser.yml`, `.golangci.yml`, the Forgejo line in
+     `CLAUDE.md.tmpl`, `${2}` in `go/ext` and `go/kubebuilder`;
+   - `go/k8s` only: drop the `go.mod` and `CLAUDE.md` overrides in favour of the
+     correct category defaults, then the chart, `helm.just`, README, PR
+     template, ECR doc, `mise.toml`, and catalog defaults; plus delete
+     `bun/std/charts/temp/` and `go/ext/charts/.yamllint.yml.tmpl`.
+3. **Forge.** Observation 3 and the lock items in Observation 9 are one new
+   forge issue (the lock and prune path). forge#44 is the remote-fetch path
+   (`resolveRegistrySource` and go-getter) with no file overlap, so the two can
+   land in either order. Recommendation C option (b) waits on forge RFC-0003
+   (locals, still Draft); options (a) and (c) do not.
 
 ## References
 
