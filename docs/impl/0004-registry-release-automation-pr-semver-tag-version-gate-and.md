@@ -85,6 +85,12 @@ kept.
 - Handling blueprint _deletion_ (registry entry removal is manual today; the
   gate warns and skips dirs whose `blueprint.hcl` is gone)
 - Prerelease/build-metadata semver segments — bare `vX.Y.Z` only
+- Consumer-side blueprint update PRs: a renovate custom manager in forged repos
+  that reads blueprint versions from `registry.hcl` at the latest registry tag
+  and bumps `.forge-lock.hcl`. Depends on the tags this plan produces and on
+  renovate being back online; tracked separately once both exist
+- Wiring renovate's `postUpgradeTasks` to `scripts/bump-blueprint.sh` — the
+  script lands here (Phase 2); the renovate config lands when renovate does
 
 ## Verified Behavior (from INV-0002)
 
@@ -202,6 +208,27 @@ blueprint added in the same PR is found on the branch, and its wholesale-new
 `blueprint.hcl` naturally contains a `+version` line, so scaffolding a new
 blueprint passes without special-casing.
 
+**Bot PRs are not exempt.** A dependency bump inside a blueprint directory is a
+blueprint change that consumers should receive, so the gate has no actor
+exemption: dependabot and renovate PRs that touch `<cat>/<name>/**` must bump
+that blueprint like any other PR (decided 2026-09-09; PR #30, a vitest bump in
+`bun/std` with no `blueprint.hcl` change, is the live example). Two mechanisms
+supply the bump:
+
+- `scripts/bump-blueprint.sh <cat>/<name> <major|minor|patch>` — a plain script
+  that rewrites the `version` line so both humans and bots use the same code
+  path. The `/blueprint-bump-version` skill keeps its batch/UX role.
+- Renovate, once it is back online (self-hosted), runs the script from
+  `postUpgradeTasks` so its PRs arrive already bumped. Dependabot has no
+  post-upgrade hook and its `pull_request` runs get a read-only token, so
+  dependabot PRs fail the gate until a maintainer pushes the bump commit; the
+  intended end state is renovate replacing dependabot for blueprint directories.
+
+The consumer side of this loop — renovate in a forged repo reading
+`registry.hcl` at the latest `v*` tag and opening "update to blueprint X.Y.Z"
+PRs against `.forge-lock.hcl` — is what the release tags from Phase 3 make
+possible; it is out of scope here (see Out of Scope).
+
 **`title-lint`** runs `amannn/action-semantic-pull-request` (SHA-pinned, on
 `opened` / `edited` / `synchronize` / `reopened`): standard types, scope
 optional, but when a scope is present it must match
@@ -224,6 +251,10 @@ well-formed for the `cliff.toml` group.
       `pull_request` types above
 - [ ] Add a `action-tests` job (or fold into `version-gate`) running the bats
       suites from Phases 1–2 in CI
+- [ ] Write `scripts/bump-blueprint.sh <cat>/<name> <level>`
+      (`set -Eeuo     pipefail`, shellcheck clean, bats-tested: each level from
+      `0.1.4`, refuses an unknown blueprint or level, edits only the `version`
+      line) — the hook renovate `postUpgradeTasks` will call
 
 #### Success Criteria
 
@@ -231,6 +262,9 @@ well-formed for the `cliff.toml` group.
 - A draft PR editing `go/cli/mise.toml.tmpl` without a bump fails `version-gate`
   with a `::error::` naming `go/cli`; adding the bump turns it green (verified
   on a scratch PR before merging this phase)
+- A bot-shaped PR (the #30 pattern: `bun/std/package.json` changed, no
+  `blueprint.hcl` change) fails `version-gate`; after
+  `scripts/bump-blueprint.sh bun/std patch` on the branch it passes
 - A PR titled `Chore/reg bump` fails `title-lint`; `chore(go/cli): probe` passes
 - Docs-only PRs (like the one landing this doc) pass both gates untouched
 
@@ -357,6 +391,8 @@ protection lists the drift check as required, drop it there too.
 | `.github/actions/pr-semver-tag/test/*.bats`   | Create | Unit tests for pure functions                  |
 | `scripts/check-blueprint-bump.sh`             | Create | Version-bump gate                              |
 | `scripts/test/check-blueprint-bump.bats`      | Create | Fixture-repo tests for the gate                |
+| `scripts/bump-blueprint.sh`                   | Create | Version bump helper (humans + renovate hook)   |
+| `scripts/test/bump-blueprint.bats`            | Create | Tests for the bump helper                      |
 | `.github/workflows/ci.yml`                    | Modify | Add `version-gate`, `title-lint`, bats jobs    |
 | `.github/workflows/release.yml`               | Modify | Full rewrite: two-phase single-commit release  |
 | `.github/workflows/changelog.yml`             | Delete | Drift check retired                            |
