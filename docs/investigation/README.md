@@ -16,6 +16,7 @@ Design docs, plans, and implementation docs can reference investigations by ID
 | -------- | -------------------------------------------------------------------- | --------- | ---------- | -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
 | INV-0001 | Migrate remaining blueprints to forge v0.8 variable syntax and types | Concluded | 2026-08-17 | Donald Gifford | [0001-migrate-remaining-blueprints-to-forge-v08-variable-syntax-and.md](0001-migrate-remaining-blueprints-to-forge-v08-variable-syntax-and.md) |
 | INV-0002 | CI enforcement of blueprint version bumps and registry sync          | Concluded | 2026-08-19 | Donald Gifford | [0002-ci-enforcement-of-blueprint-version-bumps-and-registry-sync.md](0002-ci-enforcement-of-blueprint-version-bumps-and-registry-sync.md)     |
+| INV-0003 | Forge go-k8s scaffold audit before initial commit                    | Open      | 2026-09-08 | Donald Gifford | [0003-forge-go-k8s-scaffold-audit-before-initial-commit.md](0003-forge-go-k8s-scaffold-audit-before-initial-commit.md)                         |
 
 <!-- END DOCZ AUTO-GENERATED -->
 <!-- BEGIN DOCZ AUTO-GENERATED -->

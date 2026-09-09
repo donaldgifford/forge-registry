@@ -18,6 +18,7 @@ nav:
         - Overview: investigation/README.md
         - 'INV-0001: Migrate remaining blueprints to forge v0.8 variable syntax and types': investigation/0001-migrate-remaining-blueprints-to-forge-v08-variable-syntax-and.md
         - 'INV-0002: CI enforcement of blueprint version bumps and registry sync': investigation/0002-ci-enforcement-of-blueprint-version-bumps-and-registry-sync.md
+        - 'INV-0003: Forge go-k8s scaffold audit before initial commit': investigation/0003-forge-go-k8s-scaffold-audit-before-initial-commit.md
     - Plans:
         - Overview: plan/README.md
     - RFCs:
