@@ -9,8 +9,7 @@ this project adheres to [Semantic Versioning](https://semver.org/).
 ### Documentation
 
 - *(inv-0002)* CI enforcement of blueprint version bumps and registry sync ([#27](https://github.com/donaldgifford/forge-registry/issues/27))
-- *(inv-0003)* Re-id scaffold audit as INV-0003 and repair docz index/nav
-- *(inv-0003)* Add registry-source and blast-radius addendum
+- *(inv-0003)* Go/k8s scaffold audit with registry-source addendum ([#29](https://github.com/donaldgifford/forge-registry/issues/29))
 
 ## [0.1.2] - 2026-08-19
 
