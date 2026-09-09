@@ -37,6 +37,7 @@ created: 2026-08-17
   - [OQ-6 — PR batching](#oq-6--pr-batching)
   - [OQ-7 — Drive-by fixes in the migration PRs](#oq-7--drive-by-fixes-in-the-migration-prs)
 - [References](#references)
+
 <!--toc:end-->
 
 ## Question
@@ -295,6 +296,11 @@ own ("other").
   back.
 
 **Decision:** a — default flips to `"github"`; `"forgejo"` stays valid.
+
+> **Superseded (2026-09-09):** ADR-0001 drops `"forgejo"` from the allowed set
+> and removes the Forgejo trees entirely, which is option (c) without the "until
+> it's back". The `git_provider` object shape is unchanged. See
+> `docs/adr/0001-drop-forgejo-as-a-render-target-and-keep-conditional-rendering.md`.
 
 ### OQ-3 — Fixing the 5 broken-surface blueprints
 
