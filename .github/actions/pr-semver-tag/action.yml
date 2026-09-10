@@ -1,0 +1,86 @@
+---
+# Label-driven semver for squash-merged PRs, in two modes.
+#
+# `compute` resolves the merged PR, maps its labels to a bump level, and
+# emits the current and next versions without touching the repo. The
+# release job uses that to decide whether to build a release commit at
+# all. `tag` repeats the same computation and tags the workspace HEAD,
+# which by then is the release commit — the property that lets one job
+# regenerate the registry index and changelog and still tag the result
+# (INV-0002 Observation 10).
+#
+# Descriptions are single-line on purpose: yamlfmt reflows folded
+# scalars and leaks its internal line marker into them.
+#
+# Scratch-built rather than adopting jefflinse/pr-semver-bump or
+# haya14busa/action-bumpr; see INV-0002 Addendum 2 for that decision.
+name: PR Semver Tag
+description: Compute the next semver version from a merged pull request's labels, and optionally tag HEAD.
+
+inputs:
+  mode:
+    description: "`compute` emits outputs only. `tag` also creates, pushes, and comments the tag."
+    required: true
+  github-token:
+    description: Token used for the PR lookup, tag push, and PR comment.
+    required: false
+    default: ${{ github.token }}
+  major-label:
+    description: PR label that selects a major bump.
+    required: false
+    default: major
+  minor-label:
+    description: PR label that selects a minor bump.
+    required: false
+    default: minor
+  patch-label:
+    description: PR label that selects a patch bump.
+    required: false
+    default: patch
+  noop-labels:
+    description: Comma-separated labels that suppress the release. Beats any semver label on the same PR.
+    required: false
+    default: dont-release
+  tag-prefix:
+    description: Prefix for tag names and emitted versions.
+    required: false
+    default: v
+  target:
+    description: Commit-ish to tag in `tag` mode.
+    required: false
+    default: HEAD
+
+outputs:
+  skip:
+    description: True when no release should happen — no PR, no semver label, or an opt-out label.
+    value: ${{ steps.semver.outputs.skip }}
+  bump-level:
+    description: One of `major`, `minor`, `patch`, or `none`.
+    value: ${{ steps.semver.outputs.bump-level }}
+  current-version:
+    description: Latest prefixed tag reachable from HEAD, or the zero base when the repo has none.
+    value: ${{ steps.semver.outputs.current-version }}
+  next-version:
+    description: Computed next version. Empty when `skip` is true.
+    value: ${{ steps.semver.outputs.next-version }}
+  pr-number:
+    description: Merged PR number. Empty when no PR was found.
+    value: ${{ steps.semver.outputs.pr-number }}
+
+runs:
+  using: composite
+  steps:
+    # Composite actions do not populate INPUT_* the way JavaScript and
+    # Docker actions do, so every input is plumbed through explicitly.
+    - id: semver
+      shell: bash
+      run: ${{ github.action_path }}/entrypoint.sh
+      env:
+        INPUT_MODE: ${{ inputs.mode }}
+        INPUT_GITHUB_TOKEN: ${{ inputs.github-token }}
+        INPUT_MAJOR_LABEL: ${{ inputs.major-label }}
+        INPUT_MINOR_LABEL: ${{ inputs.minor-label }}
+        INPUT_PATCH_LABEL: ${{ inputs.patch-label }}
+        INPUT_NOOP_LABELS: ${{ inputs.noop-labels }}
+        INPUT_TAG_PREFIX: ${{ inputs.tag-prefix }}
+        INPUT_TARGET: ${{ inputs.target }}
