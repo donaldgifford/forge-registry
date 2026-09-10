@@ -27,8 +27,11 @@ docz create adr "Your ADR Title"
 - **Superseded by ADR-XXXX**: Replaced by another ADR
 
 <!-- BEGIN DOCZ AUTO-GENERATED -->
+
 ## All ADRs
 
-| ID | Title | Status | Date | Author | Link |
-|----|-------|--------|------|--------|------|
+| ID       | Title                                                          | Status   | Date       | Author         | Link                                                                                                                                             |
+| -------- | -------------------------------------------------------------- | -------- | ---------- | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| ADR-0001 | Drop Forgejo as a render target and keep conditional rendering | Accepted | 2026-09-09 | Donald Gifford | [0001-drop-forgejo-as-a-render-target-and-keep-conditional-rendering.md](0001-drop-forgejo-as-a-render-target-and-keep-conditional-rendering.md) |
+
 <!-- END DOCZ AUTO-GENERATED -->
