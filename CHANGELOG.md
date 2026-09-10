@@ -9,12 +9,17 @@ this project adheres to [Semantic Versioning](https://semver.org/).
 ### Features
 
 - *(ci)* Add pr-semver-tag composite action ([#32](https://github.com/donaldgifford/forge-registry/issues/32))
+- *(ci)* Gate blueprint changes on a version bump
 
 ### Documentation
 
 - *(inv-0002)* CI enforcement of blueprint version bumps and registry sync ([#27](https://github.com/donaldgifford/forge-registry/issues/27))
 - *(inv-0003)* Go/k8s scaffold audit with registry-source addendum ([#29](https://github.com/donaldgifford/forge-registry/issues/29))
 - *(adr-0001)* Drop Forgejo as a render target, keep conditional rendering ([#31](https://github.com/donaldgifford/forge-registry/issues/31))
+
+### Styling
+
+- *(scripts)* Apply shfmt -i 2 -ci to labels.sh
 
 ## [0.1.2] - 2026-08-19
 
