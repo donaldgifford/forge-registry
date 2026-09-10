@@ -10,7 +10,7 @@ this project adheres to [Semantic Versioning](https://semver.org/).
 
 - *(inv-0002)* CI enforcement of blueprint version bumps and registry sync ([#27](https://github.com/donaldgifford/forge-registry/issues/27))
 - *(inv-0003)* Go/k8s scaffold audit with registry-source addendum ([#29](https://github.com/donaldgifford/forge-registry/issues/29))
-- *(adr-0001)* Drop Forgejo as a render target, keep conditional rendering
+- *(adr-0001)* Drop Forgejo as a render target, keep conditional rendering ([#31](https://github.com/donaldgifford/forge-registry/issues/31))
 
 ## [0.1.2] - 2026-08-19
 
