@@ -155,27 +155,40 @@ explicitly (as action-bumpr does).
 
 #### Tasks
 
-- [ ] Write `action.yml`: inputs/outputs above, `runs.using: composite`,
+- [x] Write `action.yml`: inputs/outputs above, `runs.using: composite`,
       explicit `env:` plumbing for every input
-- [ ] Write `entrypoint.sh` with `set -Eeuo pipefail`, functions for each step
+- [x] Write `entrypoint.sh` with `set -Eeuo pipefail`, functions for each step
       (`find_pr`, `bump_level_from_labels`, `current_version`, `next_version`,
       `create_tag`), and a `[[ "${BASH_SOURCE[0]}" == "$0" ]]` main guard so
       bats can source it
-- [ ] Handle the edge cases: no PR for `GITHUB_SHA`, no semver label, zero
+- [x] Handle the edge cases: no PR for `GITHUB_SHA`, no semver label, zero
       existing tags, tag already exists, multiple labels (precedence)
-- [ ] `shellcheck` clean; follow Google style per repo shell conventions
-- [ ] Write bats tests for the pure functions: label mapping (all four labels +
+- [x] `shellcheck` clean; follow Google style per repo shell conventions
+- [x] Write bats tests for the pure functions: label mapping (all four labels +
       none + multiple), version parsing/increment (from `0.0.0`, from `v0.1.4`,
       each level), tag-name assembly with prefix
-- [ ] Add `bats` to `mise.toml` dev tools so the tests run locally and in CI
+- [x] Add `bats` to `mise.toml` dev tools so the tests run locally and in CI
+- [x] Add `.github/workflows/semver-smoke.yml`, a `workflow_dispatch`-only job
+      that runs `mode: compute` and asserts the third success criterion. The
+      bats suite cannot cover the composite wiring (whether `action.yml`'s
+      `INPUT_*` plumbing reaches the script and the outputs come back through
+      `steps.<id>.outputs`), and that wiring is what Phase 3 depends on
 
 #### Success Criteria
 
-- `bats .github/actions/pr-semver-tag/test/` passes
-- `shellcheck entrypoint.sh` reports nothing
+- `bats .github/actions/pr-semver-tag/test/` passes — 34 tests green
+- `shellcheck entrypoint.sh` reports nothing — also clean under
+  `shfmt -i 2 -ci`, `yamllint`, and `actionlint`
 - A `workflow_dispatch` smoke run of `mode: compute` on `main` emits
   `current-version` matching `git describe --tags --abbrev=0` and `skip=true`
-  (no PR associated with a dispatch)
+  (no PR associated with a dispatch) — **pending merge**: `workflow_dispatch`
+  only becomes dispatchable once the workflow is on the default branch, so this
+  is verified immediately after this phase merges, not before
+
+**Note on `yamlfmt`.** It reflows folded scalars (`>-`) and leaks its internal
+`#magic___^_^___line` marker into the reflowed text. Descriptions in
+`action.yml` are single-line plain scalars for that reason; `.yamllint.yml`
+allows 120 columns, so they fit.
 
 ---
 
@@ -389,6 +402,7 @@ protection lists the drift check as required, drop it there too.
 | `.github/actions/pr-semver-tag/action.yml`    | Create | Composite action interface                     |
 | `.github/actions/pr-semver-tag/entrypoint.sh` | Create | Compute/tag implementation                     |
 | `.github/actions/pr-semver-tag/test/*.bats`   | Create | Unit tests for pure functions                  |
+| `.github/workflows/semver-smoke.yml`          | Create | Dispatch-only composite-wiring check           |
 | `scripts/check-blueprint-bump.sh`             | Create | Version-bump gate                              |
 | `scripts/test/check-blueprint-bump.bats`      | Create | Fixture-repo tests for the gate                |
 | `scripts/bump-blueprint.sh`                   | Create | Version bump helper (humans + renovate hook)   |

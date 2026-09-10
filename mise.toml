@@ -27,6 +27,8 @@ git-cliff = "latest"
 actionlint = "latest"
 # renovate: datasource=github-releases depName=casey/just
 just = "latest"
+# renovate: datasource=github-releases depName=bats-core/bats-core
+bats = "latest"
 
 # tools
 # renovate: datasource=github-releases depName=mikefarah/yq
