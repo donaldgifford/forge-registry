@@ -1,40 +1,107 @@
 ---
 # yaml-language-server: $schema=https://www.schemastore.org/github-workflow.json
+#
+# Label-driven release: one commit, one tag, per merged PR.
+#
+# The old flow tagged the squash-merge commit directly and left
+# registry.hcl's latest_commit pins pointing at commits that no longer
+# existed, because a squash rewrites them (INV-0002 Observation 5). A
+# separate workflow then regenerated the changelog afterwards, so the
+# tag never contained the changelog entry describing it.
+#
+# This job does the whole thing in order and tags the result:
+#
+#   1. compute the next version from the merged PR's labels
+#   2. forge registry update  — heal the squash-orphaned pins
+#   3. git-cliff --tag        — write the section for a tag that does
+#                               not exist yet
+#   4. one chore(release) commit holding both files
+#   5. push, then tag that commit
+#
+# registry.hcl and CHANGELOG.md sit outside every `<bpPath>/` pin
+# filter, so writing them cannot re-stale the pins just written
+# (INV-0002 Observations 2 and 4).
+#
+# A `dont-release` merge computes `skip=true` and stops after step 1.
 name: Release
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
 
 permissions:
-  contents: write
-  packages: write
-  issues: read
-  pull-requests: read
+  contents: read
+
+# Two merges landing together would otherwise race on the push in step
+# 5. Releases are cheap and strictly ordered, so queue them.
+concurrency:
+  group: release-main
+  cancel-in-progress: false
 
 jobs:
-  bump-version:
-    name: Bump Version
+  release:
+    name: Release
     runs-on: ubuntu-latest
-    outputs:
-      tag: ${{ steps.bump.outputs.version }}
-      skipped: ${{ steps.bump.outputs.skipped }}
+    permissions:
+      contents: write
+      pull-requests: write
+    # Belt and braces. Pushes authenticated with GITHUB_TOKEN do not
+    # start new workflow runs, so step 5 cannot re-trigger this job;
+    # the guard also covers a release commit arriving any other way.
+    if: ${{ !startsWith(github.event.head_commit.message, 'chore(release)') }}
     steps:
-      - uses: actions/checkout@v6
+      - name: Harden Runner
+        uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5  # v2.19.3
         with:
-          fetch-depth: 0
+          egress-policy: audit
 
-      - uses: jefflinse/pr-semver-bump@v1.7.4
-        id: bump
-        name: Bump and Tag Version
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
         with:
-          mode: bump
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-          require-release-notes: false
-          major-label: major
-          minor-label: minor
-          patch-label: patch
-          noop-labels: "dont-release"
-          release-notes-prefix: "### RELEASE NOTES"
-          with-v: true
+          # forge registry update rewrites every blueprint's pin from
+          # git history, and the action reads the latest reachable tag.
+          fetch-depth: 0
+          fetch-tags: true
+          # Persisted credentials authenticate both the push and the
+          # tag push the action makes.
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up mise
+        uses: jdx/mise-action@v4
+        with:
+          experimental: true
+
+      - name: Compute the next version
+        id: ver
+        uses: ./.github/actions/pr-semver-tag
+        with:
+          mode: compute
+
+      - name: Build the release commit
+        if: steps.ver.outputs.skip != 'true'
+        env:
+          NEXT: ${{ steps.ver.outputs.next-version }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email \
+            "41898282+github-actions[bot]@users.noreply.github.com"
+
+          forge registry update --registry-dir .
+          git-cliff --tag "$NEXT" -o CHANGELOG.md
+
+          if git diff --quiet -- registry.hcl CHANGELOG.md; then
+            echo "Nothing to commit; the tag will land on the merge commit."
+            exit 0
+          fi
+
+          git add registry.hcl CHANGELOG.md
+          git commit -m "chore(release): ${NEXT}"
+          git push origin HEAD:main
+
+      # Tags the workspace HEAD, which is the release commit when the
+      # previous step made one and the merge commit when it did not.
+      - name: Tag the release
+        if: steps.ver.outputs.skip != 'true'
+        uses: ./.github/actions/pr-semver-tag
+        with:
+          mode: tag
