@@ -45,7 +45,7 @@ created: 2026-08-19
 - [Addendum 3: remote-fetch defaults (2026-08-25)](#addendum-3-remote-fetch-defaults-2026-08-25)
   - [Observation 12: remote fetch without a ref is broken](#observation-12-remote-fetch-without-a-ref-is-broken)
   - [Observation 13: bare URLs route to the http getter](#observation-13-bare-urls-route-to-the-http-getter)
-  - [Decision: default ref = latest v* tag; normalize URLs](#decision-default-ref--latest-v-tag-normalize-urls)
+  - [Decision: default ref = latest v\* tag; normalize URLs](#decision-default-ref--latest-v-tag-normalize-urls)
 - [References](#references)
 
 <!--toc:end-->
@@ -334,6 +334,11 @@ Squash merge orphans the pin every time (Observation 5).
 
 > **Decided (2026-08-20): a** — file the upstream issue describing the
 > squash/rebase failure mode; nothing here blocks on it.
+>
+> **Filed (2026-09-14):**
+> [forge#45](https://github.com/donaldgifford/forge/issues/45), proposing
+> `git rev-parse HEAD:<bpPath>` as the content hash and a hybrid field layout
+> that avoids a breaking registry-format change.
 
 The pin is a commit SHA, which is what makes it fragile under history rewrites.
 A content hash of the blueprint directory would be immune to squash, rebase, and
@@ -616,7 +621,12 @@ Why scratch wins over the fork:
   real releases — promotion is a directory copy plus a `uses:` pin change, at
   which point the forge repo can adopt it too.
 
-Implementation is specced in IMPL-0004.
+Implementation is specced in IMPL-0004, whose Phases 1 through 3 shipped between
+2026-09-08 and 2026-09-14: the `pr-semver-tag` composite action, the
+`Blueprint Version Gate` and `PR Title Lint` jobs, the rewritten single-commit
+`release.yml`, and the retirement of both changelog workflows. The noop
+(`dont-release`) release path is verified; the release path awaits the first
+real blueprint merge.
 
 ## Addendum 3: remote-fetch defaults (2026-08-25)
 
@@ -670,7 +680,7 @@ the web URL returns an unauthenticated 404, so the user sees
 `.git`-suffixed bare form tries git first (hitting Observation 12), then falls
 back to http and reports both errors.
 
-### Decision: default ref = latest v* tag; normalize URLs
+### Decision: default ref = latest v\* tag; normalize URLs
 
 An upstream forge change, recorded here because it completes this
 investigation's consumer story:
@@ -717,7 +727,8 @@ Scope check: this is a contained forge change — a normalize function keyed by
 two defaulted flags, an ls-remote pre-flight with a semver sort, and two
 call-site fixes — filed 2026-08-26 as
 [forge#44](https://github.com/donaldgifford/forge/issues/44); the content-hash
-pin proposal remains a separate IMPL-0004 Phase 4 task.
+pin proposal was filed separately as
+[forge#45](https://github.com/donaldgifford/forge/issues/45) (2026-09-14).
 
 ## References
 

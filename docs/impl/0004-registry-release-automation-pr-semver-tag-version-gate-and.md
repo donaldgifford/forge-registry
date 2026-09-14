@@ -446,9 +446,15 @@ From here `CHANGELOG.md` is written once per release, inside the
       [34845717423](https://github.com/donaldgifford/forge-registry/actions/runs/34845717423):
       the compute step succeeded, both the commit and tag steps reported
       `skipped`, and no new commit or tag landed on `main`
-- [ ] File the upstream forge issue: squash/rebase merges orphan the
+- [x] File the upstream forge issue: squash/rebase merges orphan the
       `latest_commit` pin (INV-0002 Observation 5); propose a content-hash or
-      hybrid pin; link INV-0002
+      hybrid pin; link INV-0002 — filed as
+      [forge#45](https://github.com/donaldgifford/forge/issues/45) (2026-09-14).
+      Proposes `git rev-parse HEAD:<bpPath>` as the candidate hash, verified
+      stable across commits that do not touch the directory and identical at two
+      different commits; notes the hybrid shape (keep `latest_commit`
+      informational, compare on `content_hash`) avoids a breaking format change,
+      and that a tree hash stays blind to uncommitted edits exactly as today
 - [x] File the second forge issue (INV-0002 Addendum 3): remote fetch with no
       ref dies on `git checkout ""` (pre-created dst forces go-getter's update
       path); propose `owner/repo` defaulting to github.com behind `--git-host` /
