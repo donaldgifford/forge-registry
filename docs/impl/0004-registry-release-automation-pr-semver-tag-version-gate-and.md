@@ -31,6 +31,7 @@ created: 2026-08-23
     - [Success Criteria](#success-criteria-2)
   - [Phase 4: docs, end-to-end verification, and upstream issue](#phase-4-docs-end-to-end-verification-and-upstream-issue)
     - [Tasks](#tasks-3)
+    - [Found during Phase 4, out of scope here](#found-during-phase-4-out-of-scope-here)
     - [Success Criteria](#success-criteria-3)
 - [File Changes](#file-changes)
 - [Testing Plan](#testing-plan)
@@ -415,22 +416,36 @@ From here `CHANGELOG.md` is written once per release, inside the
 
 #### Tasks
 
-- [ ] Update `CLAUDE.md`: authors no longer run `forge registry update` (the
+- [x] Update `CLAUDE.md`: authors no longer run `forge registry update` (the
       release job owns `registry.hcl`); blueprint edits require a `version` bump
       (gate-enforced); PR titles are conventional commits with optional
-      `<category>/<name>` scope
-- [ ] Update `docs/` contributor docs (registry workflow page) with the new PR →
-      release lifecycle and a diagram of the single-commit flow
-- [ ] Update the `/blueprint-bump-version` and `/registry-validate` skill docs
-      if they reference the retired manual-sync workflow
+      `<category>/<name>` scope — added a **Release Workflow** section,
+      corrected the "no build step or tests" claim, and flagged that the config
+      linters do not run in CI
+- [x] Update contributor docs with the new PR → release lifecycle and a mermaid
+      diagram of the single-commit flow — written as a root `CONTRIBUTING.md`
+      rather than a `docs/` page, because `docz` regenerates `mkdocs.yml` nav
+      wholesale and a hand-added entry would not survive the next `docz update`.
+      `README.md` now links to it
+- [x] Update the `/blueprint-bump-version` and `/registry-validate` skill docs —
+      both needed more than a manual-sync mention. `blueprint-bump-version` now
+      delegates to `scripts/bump-blueprint.sh` instead of hand-editing, and
+      `registry-validate` was rewritten against the real HCL schema; its
+      previous checks asserted an `apiVersion` field that does not exist,
+      `type: choice` / `choices` / `validate` forms removed in forge v0.7,
+      Go-template `{{ .var }}` extraction, and a `${project_name}/` rename rule
+      no blueprint uses
 - [ ] End-to-end verification, release path: merge a real blueprint PR with a
       `patch` label; confirm the tag points at the release commit
       (`git rev-parse vX.Y.Z^{commit}`), `forge registry update --check` exits 0
       at that tag, and the changelog section renders the entry under Blueprint
       Changes
-- [ ] End-to-end verification, noop path: merge a `dont-release` docs PR;
+- [x] End-to-end verification, noop path: merge a `dont-release` docs PR;
       confirm no tag, no release commit, `--check` unchanged from before the
-      merge
+      merge — verified on run
+      [34845717423](https://github.com/donaldgifford/forge-registry/actions/runs/34845717423):
+      the compute step succeeded, both the commit and tag steps reported
+      `skipped`, and no new commit or tag landed on `main`
 - [ ] File the upstream forge issue: squash/rebase merges orphan the
       `latest_commit` pin (INV-0002 Observation 5); propose a content-hash or
       hybrid pin; link INV-0002
@@ -443,6 +458,36 @@ From here `CHANGELOG.md` is written once per release, inside the
       [forge#44](https://github.com/donaldgifford/forge/issues/44) (2026-08-26)
 - [ ] Mark INV-0002 references to IMPL-0004 as landed; set this doc's status to
       Completed
+
+#### Found during Phase 4, out of scope here
+
+Three problems surfaced while updating the docs. None belong to the release
+automation, so none are being folded into this plan; each needs its own issue.
+
+1. **Eight of the ten skill docs are stale in a pre-HCL way.** Every file under
+   `.claude/skills/` describes a `blueprint.yaml` that has not existed since the
+   HCL migration; none mention `blueprint.hcl`. They also teach Go-template
+   `{{ .var }}` references rather than HCL2 `${var}`, and `registry-review`
+   still validates `type: choice` / `choices` / `validate` regexes that are load
+   errors from forge v0.8 on. `blueprint-bump-version` and `registry-validate`
+   were fixed here because Phase 4 named them; the remaining eight are
+   `forge-registry` (plus both of its `references/`), `registry-list`,
+   `registry-review`, `blueprint-scaffold`, `blueprint-update`, and
+   `blueprint-add-template`. `CLAUDE.md` now carries a warning pointing at
+   itself and `CONTRIBUTING.md` as authoritative in the meantime.
+2. **`mkdocs.yml` has a `Plans` nav entry pointing at a file that does not
+   exist.** `plan` is `enabled: false` in `.docz.yaml` and `docs/plan/` was
+   never created, so `plan/README.md` is a dead nav target. The `Plans` and
+   `Examples` sections are hand-added, and `docz update` regenerates the nav
+   wholesale and drops both on every run, so the entry (and its breakage) has to
+   be restored by hand each time. That regeneration is also why the contributor
+   guide went to a root `CONTRIBUTING.md` rather than a `docs/` page: a
+   hand-added nav entry for it would not survive the next `docz update` either.
+3. **The config linters are not wired into CI.** `yamllint`,
+   `markdownlint-cli2`, and `prettier` are documented as the quality bar for a
+   repo whose only content is config and templates, but no workflow runs them,
+   and ten Markdown files under `.claude/skills/` currently fail
+   `prettier --check` on `main`. Wiring them up means fixing that backlog first.
 
 #### Success Criteria
 
@@ -471,6 +516,11 @@ From here `CHANGELOG.md` is written once per release, inside the
 | `.github/workflows/changelog.yml`             | Delete | Drift check retired                            |
 | `.github/workflows/changelog-regen.yml`       | Delete | Folded into the release job                    |
 | `cliff.toml`                                  | Modify | Blueprint Changes group; `chore(release)` skip |
+| `CONTRIBUTING.md`                             | Create | PR → release lifecycle, labels, gate, diagram  |
+| `CLAUDE.md`                                   | Modify | Release Workflow section; linter/test caveats  |
+| `README.md`                                   | Modify | Drop manual sync; link the contributor guide   |
+| `.claude/skills/blueprint-bump-version/`      | Modify | Delegate to `scripts/bump-blueprint.sh`        |
+| `.claude/skills/registry-validate/`           | Modify | Rewrite against the real HCL schema            |
 | `mise.toml`                                   | Modify | Add `bats` dev tool                            |
 | `CLAUDE.md` / `docs/`                         | Modify | New contributor workflow                       |
 
