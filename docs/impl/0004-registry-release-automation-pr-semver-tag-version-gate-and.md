@@ -85,6 +85,12 @@ kept.
 - Handling blueprint _deletion_ (registry entry removal is manual today; the
   gate warns and skips dirs whose `blueprint.hcl` is gone)
 - Prerelease/build-metadata semver segments — bare `vX.Y.Z` only
+- Consumer-side blueprint update PRs: a renovate custom manager in forged repos
+  that reads blueprint versions from `registry.hcl` at the latest registry tag
+  and bumps `.forge-lock.hcl`. Depends on the tags this plan produces and on
+  renovate being back online; tracked separately once both exist
+- Wiring renovate's `postUpgradeTasks` to `scripts/bump-blueprint.sh` — the
+  script lands here (Phase 2); the renovate config lands when renovate does
 
 ## Verified Behavior (from INV-0002)
 
@@ -149,27 +155,40 @@ explicitly (as action-bumpr does).
 
 #### Tasks
 
-- [ ] Write `action.yml`: inputs/outputs above, `runs.using: composite`,
+- [x] Write `action.yml`: inputs/outputs above, `runs.using: composite`,
       explicit `env:` plumbing for every input
-- [ ] Write `entrypoint.sh` with `set -Eeuo pipefail`, functions for each step
+- [x] Write `entrypoint.sh` with `set -Eeuo pipefail`, functions for each step
       (`find_pr`, `bump_level_from_labels`, `current_version`, `next_version`,
       `create_tag`), and a `[[ "${BASH_SOURCE[0]}" == "$0" ]]` main guard so
       bats can source it
-- [ ] Handle the edge cases: no PR for `GITHUB_SHA`, no semver label, zero
+- [x] Handle the edge cases: no PR for `GITHUB_SHA`, no semver label, zero
       existing tags, tag already exists, multiple labels (precedence)
-- [ ] `shellcheck` clean; follow Google style per repo shell conventions
-- [ ] Write bats tests for the pure functions: label mapping (all four labels +
+- [x] `shellcheck` clean; follow Google style per repo shell conventions
+- [x] Write bats tests for the pure functions: label mapping (all four labels +
       none + multiple), version parsing/increment (from `0.0.0`, from `v0.1.4`,
       each level), tag-name assembly with prefix
-- [ ] Add `bats` to `mise.toml` dev tools so the tests run locally and in CI
+- [x] Add `bats` to `mise.toml` dev tools so the tests run locally and in CI
+- [x] Add `.github/workflows/semver-smoke.yml`, a `workflow_dispatch`-only job
+      that runs `mode: compute` and asserts the third success criterion. The
+      bats suite cannot cover the composite wiring (whether `action.yml`'s
+      `INPUT_*` plumbing reaches the script and the outputs come back through
+      `steps.<id>.outputs`), and that wiring is what Phase 3 depends on
 
 #### Success Criteria
 
-- `bats .github/actions/pr-semver-tag/test/` passes
-- `shellcheck entrypoint.sh` reports nothing
+- `bats .github/actions/pr-semver-tag/test/` passes — 34 tests green
+- `shellcheck entrypoint.sh` reports nothing — also clean under
+  `shfmt -i 2 -ci`, `yamllint`, and `actionlint`
 - A `workflow_dispatch` smoke run of `mode: compute` on `main` emits
   `current-version` matching `git describe --tags --abbrev=0` and `skip=true`
-  (no PR associated with a dispatch)
+  (no PR associated with a dispatch) — **verified** on run 34481583553 once the
+  phase merged and `workflow_dispatch` became available: `skip=true`,
+  `current=v0.1.4` matching `git describe`, and an empty `next-version`
+
+**Note on `yamlfmt`.** It reflows folded scalars (`>-`) and leaks its internal
+`#magic___^_^___line` marker into the reflowed text. Descriptions in
+`action.yml` are single-line plain scalars for that reason; `.yamllint.yml`
+allows 120 columns, so they fit.
 
 ---
 
@@ -202,6 +221,27 @@ blueprint added in the same PR is found on the branch, and its wholesale-new
 `blueprint.hcl` naturally contains a `+version` line, so scaffolding a new
 blueprint passes without special-casing.
 
+**Bot PRs are not exempt.** A dependency bump inside a blueprint directory is a
+blueprint change that consumers should receive, so the gate has no actor
+exemption: dependabot and renovate PRs that touch `<cat>/<name>/**` must bump
+that blueprint like any other PR (decided 2026-09-09; PR #30, a vitest bump in
+`bun/std` with no `blueprint.hcl` change, is the live example). Two mechanisms
+supply the bump:
+
+- `scripts/bump-blueprint.sh <cat>/<name> <major|minor|patch>` — a plain script
+  that rewrites the `version` line so both humans and bots use the same code
+  path. The `/blueprint-bump-version` skill keeps its batch/UX role.
+- Renovate, once it is back online (self-hosted), runs the script from
+  `postUpgradeTasks` so its PRs arrive already bumped. Dependabot has no
+  post-upgrade hook and its `pull_request` runs get a read-only token, so
+  dependabot PRs fail the gate until a maintainer pushes the bump commit; the
+  intended end state is renovate replacing dependabot for blueprint directories.
+
+The consumer side of this loop — renovate in a forged repo reading
+`registry.hcl` at the latest `v*` tag and opening "update to blueprint X.Y.Z"
+PRs against `.forge-lock.hcl` — is what the release tags from Phase 3 make
+possible; it is out of scope here (see Out of Scope).
+
 **`title-lint`** runs `amannn/action-semantic-pull-request` (SHA-pinned, on
 `opened` / `edited` / `synchronize` / `reopened`): standard types, scope
 optional, but when a scope is present it must match
@@ -210,28 +250,47 @@ well-formed for the `cliff.toml` group.
 
 #### Tasks
 
-- [ ] Write `scripts/check-blueprint-bump.sh` per the spec above
+- [x] Write `scripts/check-blueprint-bump.sh` per the spec above
       (`set -Eeuo pipefail`, plain globals — no `local -n`, bash 3.2 safe for
       local runs)
-- [ ] `shellcheck` clean
-- [ ] Bats tests for the classification + assertion logic against fixture git
+- [x] `shellcheck` clean
+- [x] Bats tests for the classification + assertion logic against fixture git
       repos in `$BATS_TMPDIR` (blueprint change with/without bump, category
       `_defaults/` fan-out, root `_defaults/` fan-out, deletion skip, docs-only
       no-op, dont-release rejection)
-- [ ] Add the `version-gate` job to `ci.yml` (checkout `fetch-depth: 0`, labels
+- [x] Add the `version-gate` job to `ci.yml` (checkout `fetch-depth: 0`, labels
       passed via `${{ toJSON(github.event.pull_request.labels.*.name) }}`)
-- [ ] Add the `title-lint` job to `ci.yml` with the scope regex and
+- [x] Add the `title-lint` job to `ci.yml` with the scope regex and
       `pull_request` types above
-- [ ] Add a `action-tests` job (or fold into `version-gate`) running the bats
-      suites from Phases 1–2 in CI
+- [x] Add a `script-tests` job running the bats suites from Phases 1–2 in CI,
+      plus `shellcheck` and `shfmt` over every script and action entrypoint
+- [x] Write `scripts/bump-blueprint.sh <cat>/<name> <level>`
+      (`set -Eeuo     pipefail`, shellcheck clean, bats-tested: each level from
+      `0.1.4`, refuses an unknown blueprint or level, edits only the `version`
+      line) — the hook renovate `postUpgradeTasks` will call
+- [x] Reformat `scripts/labels.sh` with `shfmt -i 2 -ci`. It was the one file
+      failing the new lint step; the diff is whitespace-only and lands as its
+      own commit
 
 #### Success Criteria
 
-- Fixture-driven bats suite passes locally and in CI
+- Fixture-driven bats suite passes locally and in CI — 85 tests across three
+  suites (34 action, 30 gate, 21 bump)
 - A draft PR editing `go/cli/mise.toml.tmpl` without a bump fails `version-gate`
-  with a `::error::` naming `go/cli`; adding the bump turns it green (verified
-  on a scratch PR before merging this phase)
+  with a `::error::` naming `go/cli`; adding the bump turns it green — verified
+  against the real 19-blueprint registry on throwaway branches rather than a
+  scratch PR, which exercises the same script and the same `git diff` mechanics
+  and leaves no PR noise behind
+- A bot-shaped PR (the #30 pattern: `bun/std/package.json` changed, no
+  `blueprint.hcl` change) fails `version-gate`; after
+  `scripts/bump-blueprint.sh bun/std patch` on the branch it passes — verified
+  the same way. PR #30 is a live dependabot PR of exactly this shape, so the
+  workflow-level check falls out of re-running it once this merges
+- A root `_defaults/` change obligates all 19 blueprints — verified
 - A PR titled `Chore/reg bump` fails `title-lint`; `chore(go/cli): probe` passes
+  — **the failing case is unverified**. The passing case is exercised by this
+  phase's own PR title; the failing case needs a deliberately bad title and is
+  left to the first one that shows up
 - Docs-only PRs (like the one landing this doc) pass both gates untouched
 
 ---
@@ -355,8 +414,11 @@ protection lists the drift check as required, drop it there too.
 | `.github/actions/pr-semver-tag/action.yml`    | Create | Composite action interface                     |
 | `.github/actions/pr-semver-tag/entrypoint.sh` | Create | Compute/tag implementation                     |
 | `.github/actions/pr-semver-tag/test/*.bats`   | Create | Unit tests for pure functions                  |
+| `.github/workflows/semver-smoke.yml`          | Create | Dispatch-only composite-wiring check           |
 | `scripts/check-blueprint-bump.sh`             | Create | Version-bump gate                              |
 | `scripts/test/check-blueprint-bump.bats`      | Create | Fixture-repo tests for the gate                |
+| `scripts/bump-blueprint.sh`                   | Create | Version bump helper (humans + renovate hook)   |
+| `scripts/test/bump-blueprint.bats`            | Create | Tests for the bump helper                      |
 | `.github/workflows/ci.yml`                    | Modify | Add `version-gate`, `title-lint`, bats jobs    |
 | `.github/workflows/release.yml`               | Modify | Full rewrite: two-phase single-commit release  |
 | `.github/workflows/changelog.yml`             | Delete | Drift check retired                            |

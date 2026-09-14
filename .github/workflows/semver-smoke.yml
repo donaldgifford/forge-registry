@@ -1,0 +1,76 @@
+---
+# yaml-language-server: $schema=https://www.schemastore.org/github-workflow.json
+#
+# Manual smoke test for the pr-semver-tag composite action (IMPL-0004
+# Phase 1 success criteria).
+#
+# The bats suite covers the pure functions on any machine; what it
+# cannot cover is the composite-action wiring — whether action.yml's
+# explicit INPUT_* plumbing reaches entrypoint.sh and whether the
+# outputs come back through `steps.<id>.outputs`. This runs `compute`
+# on a real runner and asserts both.
+#
+# A dispatch has no associated pull request, so the action must report
+# skip=true while still emitting the current version. That is the same
+# path release.yml takes for a direct push to main.
+#
+# Dispatch-only: it must never run on push, and it never tags anything.
+name: Semver Smoke
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  compute:
+    name: Compute (dry run)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5  # v2.19.3
+        with:
+          egress-policy: audit
+
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+        with:
+          # current_version reads `git tag --merged HEAD`, so the tags
+          # and the history that makes them reachable must be present.
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Compute next version
+        id: ver
+        uses: ./.github/actions/pr-semver-tag
+        with:
+          mode: compute
+
+      - name: Assert the dispatch path
+        env:
+          SKIP: ${{ steps.ver.outputs.skip }}
+          CURRENT: ${{ steps.ver.outputs.current-version }}
+          NEXT: ${{ steps.ver.outputs.next-version }}
+        run: |-
+          expected="$(git describe --tags --abbrev=0 2>/dev/null || echo v0.0.0)"
+
+          echo "skip=${SKIP} current=${CURRENT} next=${NEXT}"
+          echo "git describe says: ${expected}"
+
+          if [[ "$SKIP" != "true" ]]; then
+            echo "::error::a dispatch has no PR, so skip should be true"
+            exit 1
+          fi
+
+          if [[ "$CURRENT" != "$expected" ]]; then
+            echo "::error::current-version ${CURRENT} != ${expected}"
+            exit 1
+          fi
+
+          if [[ -n "$NEXT" ]]; then
+            echo "::error::next-version should be empty when skipping"
+            exit 1
+          fi
+
+          echo "composite wiring and outputs verified"

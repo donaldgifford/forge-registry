@@ -246,22 +246,22 @@ main() {
   # Parse arguments
   while [[ $# -gt 0 ]]; do
     case $1 in
-    --dry-run)
-      DRY_RUN=true
-      shift
-      ;;
-    --force)
-      FORCE=true
-      shift
-      ;;
-    --help | -h)
-      show_help
-      ;;
-    *)
-      log_error "Unknown option: $1"
-      echo "Use --help for usage information"
-      exit 1
-      ;;
+      --dry-run)
+        DRY_RUN=true
+        shift
+        ;;
+      --force)
+        FORCE=true
+        shift
+        ;;
+      --help | -h)
+        show_help
+        ;;
+      *)
+        log_error "Unknown option: $1"
+        echo "Use --help for usage information"
+        exit 1
+        ;;
     esac
   done
 
