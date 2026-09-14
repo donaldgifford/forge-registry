@@ -1,57 +1,94 @@
 ---
 name: blueprint-bump-version
 description: >
-  Bump the semver version of one or more blueprints in the forge registry.
-  Use when bumping versions, releasing blueprints, or doing batch version
-  updates. Triggers on: "bump go/ext version", "bump all blueprints minor",
-  "version bump", "release bump".
+  Bump the semver version of one or more blueprints in the forge registry. Use
+  when bumping versions, releasing blueprints, or doing batch version updates.
+  Triggers on: "bump go/ext version", "bump all blueprints minor", "version
+  bump", "release bump".
 ---
 
 # Blueprint Bump Version
 
-Bump the semantic version of blueprints.
+Bump the semantic version of blueprints in `blueprint.hcl`.
+
+## Do not hand-edit the version
+
+`scripts/bump-blueprint.sh` owns this. It parses the current version, applies
+the bump, and rewrites only the quoted value on the `version` line so the
+alignment survives and the diff is one line. It is covered by
+`scripts/test/bump-blueprint.bats`.
+
+```bash
+scripts/bump-blueprint.sh <category>/<name> <major|minor|patch>
+```
+
+Reach for the script for every bump, including batches — loop over it rather
+than editing files directly.
+
+## Why the bump is mandatory
+
+Consumers pin a blueprint by `version`. Changing template files without bumping
+hands people different output under a version they already resolved. CI enforces
+it: the `Blueprint Version Gate` job runs `scripts/check-blueprint-bump.sh`,
+which fails the PR naming every blueprint that changed without a bump.
+
+Run the gate to find out what is owed rather than reasoning about it:
+
+```bash
+scripts/check-blueprint-bump.sh
+```
+
+It accounts for inheritance fan-out, which is easy to get wrong by hand. A
+change under the registry root `_defaults/` obligates all 19 blueprints; a
+change under `<category>/_defaults/` obligates that category's blueprints.
 
 ## Process
 
-1. **Determine scope** from `$ARGUMENTS` or user request:
-   - **Single blueprint:** `<category>/<name>` (e.g., `go/ext`)
-   - **Category batch:** `<category>` (e.g., `go` — bumps all blueprints
-     in the category)
-   - **Registry batch:** `all` — bumps every blueprint in the registry
+1. **Determine scope** from `$ARGUMENTS` or the user request:
+   - **Single blueprint:** `<category>/<name>` (e.g. `go/ext`)
+   - **Category batch:** `<category>` (e.g. `go`)
+   - **Registry batch:** `all`
 
-2. **Determine bump type:**
-   - `major` — X.0.0 (breaking changes)
-   - `minor` — x.Y.0 (new features)
-   - `patch` — x.y.Z (bug fixes, default)
+   If the user is bumping because of an edit they just made, prefer running
+   `scripts/check-blueprint-bump.sh` and bumping exactly what it names.
 
-   If not specified, default to `patch`.
+2. **Determine bump level** by what a consumer would notice:
+   - `major` — required variables change, files removed, output restructured
+   - `minor` — new variable, new template file, new capability
+   - `patch` — typo, dependency bump, non-behavioural fix
 
-3. **For each target blueprint:**
+   Default to `patch` when unspecified.
 
-   a. Read `blueprint.yaml` and parse the current `version` field.
+3. **Run the script once per blueprint.** For a category or registry batch:
 
-   b. Apply the semver bump:
-      - `0.1.0` + patch = `0.1.1`
-      - `0.1.0` + minor = `0.2.0`
-      - `0.1.0` + major = `1.0.0`
+   ```bash
+   for bp in $(git ls-files -- '<category>/*/blueprint.hcl' \
+     | sed 's|/blueprint.hcl$||'); do
+     scripts/bump-blueprint.sh "$bp" patch
+   done
+   ```
 
-   c. Update the `version` field in `blueprint.yaml`.
-
-   d. Preserve all other fields and formatting (document start marker,
-      indentation, quoting style).
+   Drop the `<category>/` prefix for `all`. Note the glob matches
+   `<category>/<name>/blueprint.hcl` only, so `_defaults/` directories are
+   excluded already.
 
 4. **Output a summary table:**
 
-   ```
+   ```text
    | Blueprint | Old Version | New Version |
-   |-----------|-------------|-------------|
+   | --------- | ----------- | ----------- |
    | go/ext    | 0.1.0       | 0.1.1       |
    | go/std    | 0.1.0       | 0.1.1       |
    ```
 
+5. **Remind about the release label.** The bump alone does not release anything.
+   The PR needs one of `major`, `minor`, `patch`, or `dont-release`, and the
+   release job reads that label — not the blueprint versions — to decide the
+   registry tag. A blueprint change labelled `dont-release` is rejected.
+
 ## Examples
 
-```
+```text
 # Single blueprint patch bump
 /blueprint-bump-version go/ext patch
 
@@ -62,17 +99,19 @@ Bump the semantic version of blueprints.
 /blueprint-bump-version all patch
 ```
 
-## Finding Blueprints
+## Finding blueprints
 
 ```bash
 # All blueprints
-find . -name blueprint.yaml -not -path '*/_defaults/*' -not -path './.git/*'
+git ls-files -- '*/*/blueprint.hcl' | sed 's|/blueprint.hcl$||'
 
 # Blueprints in a category
-find ./<category>/ -name blueprint.yaml -not -path '*/_defaults/*'
+git ls-files -- '<category>/*/blueprint.hcl' | sed 's|/blueprint.hcl$||'
 ```
 
 ## References
 
+- [CONTRIBUTING.md](../../../CONTRIBUTING.md) — release labels and the PR
+  lifecycle
 - [blueprint-schema.md](../forge-registry/references/blueprint-schema.md) —
   version field specification
