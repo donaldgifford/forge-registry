@@ -1,0 +1,74 @@
+---
+# yaml-language-server: $schema=https://www.schemastore.org/github-workflow.json
+#
+# Normalise the semver label dependabot puts on its own pull requests.
+#
+# Dependabot labels a PR `major`, `minor`, or `patch` to describe what
+# the *dependency* did. This repo reads those same labels to decide what
+# the *registry* release should be. Left alone the two meanings collide:
+# PR #30 bumped vitest 2.1.9 -> 5.0.0, arrived labelled `major`, and
+# would have tagged the registry v1.0.0 for a devDependency change.
+#
+# A dependency bump inside a blueprint is a patch to the registry in
+# almost every case, so that is the default applied here. A maintainer
+# can still relabel afterwards and it will stick, because this only
+# fires when the PR is opened or reopened.
+#
+# `pull_request_target` is deliberate: `pull_request` runs on a fork or
+# dependabot PR get a read-only token, which cannot edit labels. The
+# usual danger of `pull_request_target` is running untrusted PR code
+# with a write token, and this workflow never checks the PR out — it
+# only calls the labels API.
+name: Bot Labels
+
+on:
+  pull_request_target:
+    types: [opened, reopened]
+
+permissions:
+  contents: read
+
+jobs:
+  normalise:
+    name: Normalise Bot Semver Labels
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.user.login == 'dependabot[bot]'
+    permissions:
+      pull-requests: write
+    steps:
+      - name: Replace the dependency's semver label with patch
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+        run: |-
+          set -Eeuo pipefail
+
+          labels="$(gh pr view "$PR" --repo "$REPO" \
+            --json labels --jq '.labels[].name')"
+
+          remove=()
+          for candidate in major minor; do
+            if grep -qxF "$candidate" <<<"$labels"; then
+              remove+=("$candidate")
+            fi
+          done
+
+          if [[ ${#remove[@]} -eq 0 ]]; then
+            echo "Nothing to normalise; dependabot applied no major or minor label."
+            exit 0
+          fi
+
+          args=()
+          for label in "${remove[@]}"; do
+            args+=(--remove-label "$label")
+          done
+
+          if ! grep -qxF patch <<<"$labels"; then
+            args+=(--add-label patch)
+          fi
+
+          gh pr edit "$PR" --repo "$REPO" "${args[@]}"
+
+          echo "Removed ${remove[*]}; the registry release level is now patch."
+          echo "Relabel by hand if this bump deserves minor or major."

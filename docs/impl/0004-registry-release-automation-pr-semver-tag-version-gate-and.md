@@ -237,6 +237,31 @@ supply the bump:
   dependabot PRs fail the gate until a maintainer pushes the bump commit; the
   intended end state is renovate replacing dependabot for blueprint directories.
 
+**The semver labels collide with dependabot's (found 2026-09-14).** Dependabot
+labels a PR `major`, `minor`, or `patch` to describe what the _dependency_ did.
+This repo reads those same names to decide what the _registry_ release should
+be. PR #30 bumped vitest 2.1.9 → 5.0.0, arrived labelled `major`, and satisfied
+`Check Required Labels` silently — merging it once `bun/std` was bumped would
+have tagged the registry **v1.0.0** for a devDependency change. Nothing in the
+design caught this; it surfaced only because the label was read by eye before
+the first real release.
+
+`.github/workflows/bot-labels.yml` normalises it: on `opened` and `reopened`, a
+dependabot PR's `major` or `minor` is replaced with `patch`, which is what a
+dependency bump inside a blueprint is worth to the registry in almost every
+case. Firing only on those two event types means a maintainer's later relabel
+sticks, and a PR already carrying `patch` or `dont-release` is left alone.
+
+It uses `pull_request_target` because a `pull_request` run on a dependabot PR
+gets a read-only token and cannot edit labels. The usual objection to that
+trigger is running untrusted PR code with a write token; this workflow never
+checks the PR out and only calls the labels API.
+
+Renaming the registry's labels to a `release:*` namespace would remove the
+collision class outright rather than patching this one instance. Not done: it
+means four new labels, two workflow edits, relabelling open PRs, and changed
+habits, and the normalisation covers the only bot in play.
+
 The consumer side of this loop — renovate in a forged repo reading
 `registry.hcl` at the latest `v*` tag and opening "update to blueprint X.Y.Z"
 PRs against `.forge-lock.hcl` — is what the release tags from Phase 3 make
@@ -436,6 +461,7 @@ From here `CHANGELOG.md` is written once per release, inside the
 | `.github/actions/pr-semver-tag/entrypoint.sh` | Create | Compute/tag implementation                     |
 | `.github/actions/pr-semver-tag/test/*.bats`   | Create | Unit tests for pure functions                  |
 | `.github/workflows/semver-smoke.yml`          | Create | Dispatch-only composite-wiring check           |
+| `.github/workflows/bot-labels.yml`            | Create | Normalise dependabot's semver labels           |
 | `scripts/check-blueprint-bump.sh`             | Create | Version-bump gate                              |
 | `scripts/test/check-blueprint-bump.bats`      | Create | Fixture-repo tests for the gate                |
 | `scripts/bump-blueprint.sh`                   | Create | Version bump helper (humans + renovate hook)   |
