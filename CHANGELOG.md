@@ -36,6 +36,10 @@ this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [0.1.0] - 2026-08-19
 
+### Blueprint Changes
+
+- *(go/k8s)* Lockstep release train + fixes from first real-world use ([#17](https://github.com/donaldgifford/forge-registry/issues/17))
+
 ### Features
 
 - Add forge-registry skill foundation and reference files (Phase 1)
@@ -57,11 +61,6 @@ this project adheres to [Semantic Versioning](https://semver.org/).
 - Resolve template variable mismatches and add missing YAML document start markers
 - Complete v1→v2 template syntax migration ([#8](https://github.com/donaldgifford/forge-registry/issues/8))
 - *(go)* Migrate justfile and cliff templates to HCL2 syntax ([#10](https://github.com/donaldgifford/forge-registry/issues/10))
-- *(go/k8s)* Lockstep release train + fixes from first real-world use ([#17](https://github.com/donaldgifford/forge-registry/issues/17))
-
-### Other
-
-- Update ([#12](https://github.com/donaldgifford/forge-registry/issues/12))
 
 ### Documentation
 
@@ -72,4 +71,8 @@ this project adheres to [Semantic Versioning](https://semver.org/).
 
 - Cleanup ([#13](https://github.com/donaldgifford/forge-registry/issues/13))
 - *(docs)* Add examples/ with forge-vars.hcl var-file examples; refresh root README ([#16](https://github.com/donaldgifford/forge-registry/issues/16))
+
+### Other
+
+- Update ([#12](https://github.com/donaldgifford/forge-registry/issues/12))
 

@@ -52,23 +52,37 @@ commit_preprocessors = [
   { pattern = '\((\w+\s)?#([0-9]+)\)', replace = "([#${2}](<REPO>/issues/${2}))" },
 ]
 
+# Order matters twice over. Within this list the first match wins, so
+# the blueprint rule has to precede the generic type rules. In the
+# rendered changelog the sections are sorted by the `<!-- NN -->`
+# prefix, which `striptags` removes before display; the numbers are
+# zero-padded because that sort is lexicographic, and unpadded `10`
+# would land between `1` and `2`.
 commit_parsers = [
-  { message = "^feat", group = "<!-- 0 -->Features" },
-  { message = "^fix", group = "<!-- 1 -->Bug Fixes" },
-  { message = "^refactor", group = "<!-- 2 -->Refactor" },
-  { message = "^doc", group = "<!-- 3 -->Documentation" },
-  { message = "^perf", group = "<!-- 4 -->Performance" },
-  { message = "^style", group = "<!-- 5 -->Styling" },
-  { message = "^test", group = "<!-- 6 -->Testing" },
-  { message = "^chore\\(release\\): prepare for", skip = true },
+  # A commit scoped to a blueprint is a change to something consumers
+  # pin by version. That matters more to a reader than whether it was
+  # a feat or a fix, so those commits get their own section instead of
+  # being scattered across the type groups.
+  { message = "^[a-z]+\\((bun|go|homelab|rust|std)/[a-z0-9-]+\\)", group = "<!-- 00 -->Blueprint Changes" },
+  { message = "^feat", group = "<!-- 01 -->Features" },
+  { message = "^fix", group = "<!-- 02 -->Bug Fixes" },
+  { message = "^refactor", group = "<!-- 03 -->Refactor" },
+  { message = "^doc", group = "<!-- 04 -->Documentation" },
+  { message = "^perf", group = "<!-- 05 -->Performance" },
+  { message = "^style", group = "<!-- 06 -->Styling" },
+  { message = "^test", group = "<!-- 07 -->Testing" },
+  # Broadened from `^chore\(release\): prepare for`: the release job
+  # now writes `chore(release): vX.Y.Z`, and that commit must stay out
+  # of the section it is itself creating.
+  { message = "^chore\\(release\\)", skip = true },
   { message = "^chore\\(deps.*\\)", skip = true },
   { message = "^chore\\(pr\\)", skip = true },
   { message = "^chore\\(pull\\)", skip = true },
   { message = "^chore.*[Cc]hangelog", skip = true },
-  { message = "^chore|^ci|^build", group = "<!-- 7 -->Miscellaneous Tasks" },
-  { body = ".*security", group = "<!-- 8 -->Security" },
-  { message = "^revert", group = "<!-- 9 -->Revert" },
-  { message = ".*", group = "<!-- 10 -->Other" },
+  { message = "^chore|^ci|^build", group = "<!-- 08 -->Miscellaneous Tasks" },
+  { body = ".*security", group = "<!-- 09 -->Security" },
+  { message = "^revert", group = "<!-- 10 -->Revert" },
+  { message = ".*", group = "<!-- 11 -->Other" },
 ]
 
 link_parsers = [

@@ -341,27 +341,48 @@ protection lists the drift check as required, drop it there too.
 
 #### Tasks
 
-- [ ] `cliff.toml`: add the Blueprint Changes parser ahead of the generic rules;
+- [x] `cliff.toml`: add the Blueprint Changes parser ahead of the generic rules;
       broaden the `chore(release)` skip
-- [ ] Verify locally that `git-cliff` output is unchanged for existing history
+- [x] Verify locally that `git-cliff` output is unchanged for existing history
       except grouping (no entries gained/lost)
-- [ ] Rewrite `release.yml` per the sketch (harden-runner + SHA-pinned actions,
+- [x] Rewrite `release.yml` per the sketch (harden-runner + SHA-pinned actions,
       matching `changelog-regen.yml` conventions)
-- [ ] Delete `.github/workflows/changelog.yml` and
+- [x] Delete `.github/workflows/changelog.yml` and
       `.github/workflows/changelog-regen.yml`
-- [ ] Check branch protection / required checks for references to the retired
-      workflows and update
-- [ ] `yamllint` clean on all touched workflow files
+- [x] Check branch protection / required checks for references to the retired
+      workflows and update — `main` has no branch protection, so nothing to
+      update and no required check pointed at either workflow
+- [x] `yamllint` clean on all touched workflow files — `yamlfmt` and
+      `actionlint` clean too
+- [x] Zero-pad the `<!-- NN -->` group prefixes. The sort behind them is
+      lexicographic, so the existing unpadded `10` placed **Other** between
+      **Bug Fixes** and **Refactor**; padding restores numeric order
 
 #### Success Criteria
 
 - `git-cliff -o /dev/null` runs warning-free on the new config (legacy
-  non-conventional commits still skipped, count unchanged)
+  non-conventional commits still skipped, count unchanged) — **partly met, and
+  the criterion was written wrong.** It is not warning-free: 19 legacy
+  non-conventional commits are skipped with a `WARN`. The old config emits the
+  identical warning for the identical 19, so the change introduces nothing. The
+  count-unchanged half is what actually holds
+- Output verified entry-for-entry: 31 entries before and after, an identical set
+  once sorted, with the only movement being `feat(go/k8s)` into the new
+  Blueprint Changes section and **Other** dropping to last
 - The first non-`dont-release` merge after this phase produces: exactly one
   `chore(release): vX.Y.Z` commit on `main` containing `registry.hcl` +
   `CHANGELOG.md`, an annotated tag on that commit, and a bot comment on the
-  merged PR
-- A `dont-release` merge produces no commit, no tag, no comment
+  merged PR — **unverified until a real merge**, which is Phase 4's job
+- A `dont-release` merge produces no commit, no tag, no comment — **unverified
+  until a real merge**. This PR is itself `dont-release`, so merging it is the
+  first half of that check
+
+**Consequence for contributors.** Retiring `changelog.yml` removes the drift
+check that made every PR carry a `chore(changelog)` regen commit, and retiring
+`changelog-regen.yml` stops the `chore(changelog): Auto-sync` commits on `main`.
+From here `CHANGELOG.md` is written once per release, inside the
+`chore(release)` commit, by `git-cliff --tag`. Phase 4 carries that into
+`CLAUDE.md`.
 
 ---
 
