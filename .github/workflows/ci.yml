@@ -21,3 +21,68 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/labeler@v6
+
+  # Blueprint changes must bump the changed blueprint's version.
+  # Consumers pin by version through registry.hcl, so a change shipped
+  # under the pinned version never reaches them (IMPL-0004 Phase 2).
+  version-gate:
+    name: Blueprint Version Gate
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+        with:
+          # The gate diffs against the base branch, so it needs the
+          # history that makes the merge base reachable.
+          fetch-depth: 0
+
+      - name: Check blueprint version bumps
+        env:
+          # toJSON gives a JSON array; the script also accepts a plain
+          # comma-separated list when run by hand.
+          PR_LABELS: ${{ toJSON(github.event.pull_request.labels.*.name) }}
+        run: ./scripts/check-blueprint-bump.sh
+
+  # The squash-merge subject is the PR title, and that subject is what
+  # git-cliff parses into the changelog. Non-conventional titles are
+  # how v0.1.3 and v0.1.4 vanished from it (INV-0002 Observation 7).
+  title-lint:
+    name: PR Title Lint
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Check the title is a conventional commit
+        uses: amannn/action-semantic-pull-request@48f256284bd46cdaab1048c3721360e808335d50  # v6.1.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          # A scope is optional, but when present it must be either a
+          # plain word or a <category>/<name> blueprint scope, which is
+          # what cliff.toml's Blueprint Changes group matches on.
+          requireScope: false
+          scopes: |
+            [a-z0-9-]+
+            (bun|go|homelab|rust|std)/[a-z0-9-]+
+
+  # The shell that gates and releases the registry is the only code in
+  # this repo, so it is the only thing with unit tests.
+  script-tests:
+    name: Script Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+
+      - name: Set up mise
+        uses: jdx/mise-action@v4
+        with:
+          experimental: true
+
+      - name: Lint
+        run: |
+          shellcheck scripts/*.sh .github/actions/*/entrypoint.sh
+          shfmt -i 2 -ci -d scripts/*.sh .github/actions/*/entrypoint.sh
+
+      - name: Test
+        run: bats scripts/test/ .github/actions/pr-semver-tag/test/
