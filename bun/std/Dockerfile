@@ -4,7 +4,7 @@
 # =============================================================================
 # Base stage: Node.js + Bun
 # =============================================================================
-FROM node:20-alpine AS base
+FROM node:20-alpine@sha256:fb4cd12c85ee03686f6af5362a0b0d56d50c58a04632e6c0fb8363f609372293 AS base
 
 # Install Bun globally
 RUN npm install -g bun
@@ -54,7 +54,7 @@ RUN bun run build
 # =============================================================================
 # Production stage: Caddy static file server
 # =============================================================================
-FROM caddy:2-alpine AS production
+FROM caddy:2-alpine@sha256:003a97808e781aa9f7e75cc2f43d34d461099031faf5e20faefb9f61126836f0 AS production
 
 # Copy built static files from builder stage
 COPY --from=builder /app/dist /srv
